@@ -62,7 +62,7 @@ Diese Läufe haben echte Mängel aufgedeckt, die erst dadurch auffielen:
 | **Öffentliche TLS-Zertifikate (ACME)** | kein öffentlicher DNS-Name und kein erreichbarer Port 80/443. Geprüft wurde HTTPS nur mit Caddys interner CA (`CADDY_TLS_MODE=internal`) und einem auf 127.0.0.1 abgebildeten Testnamen |
 | **Last und Antwortzeiten** | keine Lasttests durchgeführt; Kapazitätsangaben sind Konfigurationsgrenzen, keine Messwerte |
 | **Hochverfügbarkeit** | nicht umgesetzt und nicht geprüft (ein Server, jeder Dienst einmal) |
-| **GitHub Actions** | Die CI-Datei lief nach dem ersten Push im Repository (siehe Fund 4), ein vollständig grüner Lauf auf dem hier dokumentierten Stand wurde zum Zeitpunkt dieses Dokuments nicht abgewartet. Der Stand der Prüfungen auf dem Pull Request ist maßgeblich |
+| **GitHub Actions** | Die Workflow-Datei lief zweimal auf dem Pull Request. Lauf 1 (erster Push) scheiterte im Job `frontend` am Fehler aus Fund 4. Lauf 2 (Commit `06993cb`, Korrektur der CI-Datei) ist vollständig grün (`backend` mit allen Tests gegen PostgreSQL 18, `frontend`, `compose-config`). Die Läufe für die späteren Commits (Healthcheck-Korrektur, Dokumentation) wurden beim Schreiben dieses Dokuments nicht abgewartet; maßgeblich ist der Stand der Prüfungen am Pull Request |
 | **Browser außer Chromium** | Firefox und WebKit nicht geprüft |
 | **Echte Unternehmens-SSO, SCIM, MFA** | nicht umgesetzt |
 | **Virenscan, Penetrationstest, Datenschutz- und Rechtsprüfung** | nicht durchgeführt |
