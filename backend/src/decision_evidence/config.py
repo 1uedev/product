@@ -143,15 +143,15 @@ class Settings(BaseSettings):
             if not self.anthropic_model:
                 problems.append("ANTHROPIC_MODEL is required when AI_PROVIDER=anthropic")
         if self.app_env == "production":
-            problems.extend(self._production_problems())
+            problems.extend(self._production_problems(needs))
         if problems:
             raise ConfigError("invalid configuration: " + "; ".join(problems))
 
-    def _production_problems(self) -> list[str]:
+    def _production_problems(self, needs: set[str]) -> list[str]:
         problems: list[str] = []
         if not self.public_origin.startswith("https://"):
             problems.append("production requires an https PUBLIC_ORIGIN")
-        if self.ai_provider == "mock" and not self.allow_mock_ai_in_production:
+        if self.ai_provider == "mock" and not self.allow_mock_ai_in_production and ({"ai", "api"} & needs):
             problems.append("AI_PROVIDER=mock (demo adapter) is not allowed in production")
         secrets: dict[str, SecretStr | None] = {
             "DB_MIGRATOR_PASSWORD": self.db_migrator_password,

@@ -9,6 +9,9 @@
 {$SITE_ADDRESS::80} {
 	encode zstd gzip
 
+	# CADDY_TLS_MODE=auto (default): public certificates via ACME. CADDY_TLS_MODE=internal: Caddy's own CA (local production-mode trials).
+	import /etc/caddy/tls-{$CADDY_TLS_MODE:auto}.caddy
+
 	# The Keycloak admin console and the master realm are never reachable through the gateway.
 	@blocked path /auth/admin /auth/admin/* /auth/realms/master /auth/realms/master/*
 	handle @blocked {
