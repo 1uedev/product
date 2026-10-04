@@ -92,6 +92,7 @@ Alle Testläufe verwenden isolierte Compose-Projekte mit dem Präfix `de-test-` 
 | Nur der Hauptablauf | `scripts/test_e2e.sh 10-main-flow` |
 | Backup und Restore in ein neues Projekt | `scripts/test_backup_restore.sh` |
 | Produktionskonfiguration (ohne Container) | `scripts/check_prod_config.sh` |
+| Produktionsmodus: HTTPS, erster Nutzer, Einladung, sicheres Cookie (isoliertes Projekt, interne CA) | `scripts/test_prod_smoke.sh` |
 
 Lokale Entwicklung braucht Python 3.13 mit `uv` und Node 22 oder neuer mit `pnpm` (die Container nutzen Node 24). Ergebnisse der letzten Läufe: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 

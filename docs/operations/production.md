@@ -23,7 +23,7 @@
 
 1. `cp .env.example .env.prod` und alle Werte im Abschnitt „production“ setzen. Passwörter mit `openssl rand -base64 24 | tr '+/' '-_' | tr -d '='` erzeugen, `SECRET_KEY` als Fernet-Schlüssel.
    Die Datei gehört nicht ins Repository und sollte nur für den Betriebsnutzer lesbar sein (`chmod 600`).
-2. Konfiguration ohne Start prüfen: `docker compose -f compose.prod.yaml --env-file .env.prod config --quiet` (meldet fehlende Pflichtwerte). `scripts/check_prod_config.sh` prüft ohne Container, dass eine vollständige Umgebung akzeptiert und eine unvollständige abgelehnt wird.
+2. Konfiguration ohne Start prüfen: `docker compose -f compose.prod.yaml --env-file .env.prod config --quiet` (meldet fehlende Pflichtwerte). `scripts/check_prod_config.sh` prüft ohne Container, dass eine vollständige Umgebung akzeptiert und eine unvollständige abgelehnt wird. `scripts/test_prod_smoke.sh` startet die Produktionsdatei mit erzeugten Geheimnissen in einem Testprojekt und spielt die unten beschriebenen Schritte durch.
 3. Starten: `docker compose -f compose.prod.yaml --env-file .env.prod up -d --build`. Reihenfolge: PostgreSQL, `db-init` (Rollen), `migrate`, Keycloak, Speicher, Broker, `bootstrap`, API, Worker, Publisher, Frontend, Gateway.
 4. Prüfen: `curl -fsS https://<host>/api/health/ready` liefert `ready`.
 
