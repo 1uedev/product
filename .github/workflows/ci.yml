@@ -60,7 +60,7 @@ jobs:
         run: |
           cd backend && uv sync --frozen
           DB_HOST=x APP_ENV=test OIDC_ISSUER=http://x uv run python -m decision_evidence.tools.export_openapi ../docs/openapi.json
-          cd ../frontend && pnpm gen:api
+          cd ../frontend && pnpm gen:api && cd ..
           git diff --exit-code docs/openapi.json frontend/src/api/schema.d.ts
 
   compose-config:
