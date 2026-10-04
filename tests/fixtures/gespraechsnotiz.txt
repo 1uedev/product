@@ -1,0 +1,5 @@
+Gesprächsnotiz Jour fixe, Hanse Reederei
+
+Die Disposition exportiert jeden Montag die Frachtliste als CSV. Der CSV-Export bricht dabei bei mehr als 50.000 Zeilen ab, deshalb wird die Liste von Hand in Teilen geladen.
+
+Außerdem wurde nach einer mobilen App mit Offline-Modus für die Bordtechniker gefragt. Eine Zusage wurde nicht gegeben.

@@ -169,6 +169,12 @@ class Settings(BaseSettings):
             if value is None:
                 continue  # missing values are reported by the subsystem check of the process that needs them
             raw = value.get_secret_value().lower()
+            if name == "SECRET_KEY":  # Fernet keys are base64: also inspect the decoded bytes for demo markers
+                import base64
+                try:
+                    raw += base64.urlsafe_b64decode(raw.encode() + b"===").decode("latin-1").lower()
+                except ValueError:
+                    pass
             if any(marker in raw for marker in DEMO_SECRET_MARKERS):
                 problems.append(f"{name} looks like a demo/default value")
             if len(raw) < 16 and name != "RABBITMQ_URL":

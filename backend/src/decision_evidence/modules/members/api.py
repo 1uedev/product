@@ -32,7 +32,7 @@ class SettingsOut(BaseModel):
     is_demo: bool
 
 
-class WorkspaceOut(BaseModel):
+class WorkspaceDetail(BaseModel):
     tenant_id: uuid.UUID
     slug: str
     name: str
@@ -51,10 +51,10 @@ def _settings_out(s: Any) -> SettingsOut:
                        allow_self_approval=ts.allow_self_approval, evidence_fresh_days=ts.evidence_fresh_days, is_demo=ts.is_demo)
 
 
-@router.get("", response_model=WorkspaceOut)
-def get_workspace(ctx: Annotated[TenantContext, viewer]) -> WorkspaceOut:
+@router.get("", response_model=WorkspaceDetail)
+def get_workspace(ctx: Annotated[TenantContext, viewer]) -> WorkspaceDetail:
     with ctx.session() as s:
-        return WorkspaceOut(tenant_id=ctx.tenant_id, slug=ctx.slug, name=ctx.name, locale=ctx.locale, timezone=ctx.timezone, role=ctx.role,
+        return WorkspaceDetail(tenant_id=ctx.tenant_id, slug=ctx.slug, name=ctx.name, locale=ctx.locale, timezone=ctx.timezone, role=ctx.role,
                             settings=_settings_out(s), ai=provider_label(get_settings()))
 
 

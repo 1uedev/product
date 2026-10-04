@@ -1,0 +1,276 @@
+# decision-evidence: complete local DEMO stack.  docker compose up --build -d
+# Only the gateway is published (127.0.0.1). Database, broker, storage and Keycloak stay on the internal network.
+# Everything with a default here is a DEMO value: the production check refuses them (see compose.prod.yaml).
+name: ${COMPOSE_PROJECT_NAME:-decision-evidence}
+
+x-backend: &backend
+  build:
+    context: ./backend
+    secrets: [extra_ca]
+  image: decision-evidence-backend:${DE_VERSION:-dev}
+  restart: unless-stopped
+  init: true
+
+x-public: &public
+  PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:${APP_PORT:-8480}}
+
+x-oidc: &oidc
+  OIDC_ISSUER: ${PUBLIC_ORIGIN:-http://localhost:${APP_PORT:-8480}}/auth/realms/decision-evidence
+  OIDC_INTERNAL_ISSUER: http://keycloak:8080/auth/realms/decision-evidence
+  OIDC_CLIENT_ID: decision-evidence-web
+
+x-db: &db
+  DB_HOST: postgres
+  DB_NAME: decision_evidence
+
+x-s3: &s3
+  S3_ENDPOINT_URL: http://storage:8333
+  S3_BUCKET: decision-evidence
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:-demoaccesskey}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:-demosecretkey1234}
+
+x-ai: &ai
+  AI_PROVIDER: ${AI_PROVIDER:-mock}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+  MOCK_AI_DELAY_SECONDS: ${MOCK_AI_DELAY_SECONDS:-0}
+
+services:
+  postgres:
+    image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo-postgres-superuser}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot: roles and databases (idempotent, never drops anything). Runs as the only superuser consumer.
+  db-init:
+    image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+    restart: "no"
+    entrypoint: ["sh", "/scripts/db-init.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:-demo-postgres-superuser}
+      DB_NAME: decision_evidence
+      DB_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD:-demo-migrator-pw}
+      DB_AUTH_PASSWORD: ${DB_AUTH_PASSWORD:-demo-auth-pw}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:-demo-app-pw}
+      DB_WORKER_PASSWORD: ${DB_WORKER_PASSWORD:-demo-worker-pw}
+      DB_OUTBOX_PASSWORD: ${DB_OUTBOX_PASSWORD:-demo-outbox-pw}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-demo-keycloak-db}
+    volumes:
+      - ./infra/postgres/db-init.sh:/scripts/db-init.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # One-shot: Alembic migrations, never run by API processes. Uses the migrator role (table owner).
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      <<: [*db, *public]
+      DB_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD:-demo-migrator-pw}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+  storage:
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/scripts/entrypoint.sh"]
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-demoaccesskey}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-demosecretkey1234}
+    volumes:
+      - seaweed-data:/data
+      - ./infra/storage/entrypoint.sh:/scripts/entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:9333/cluster/status >/dev/null && nc -z 127.0.0.1 8333"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:4.3.6-alpine@sha256:2cb43283d8bbd3caa6c0f0dc00e96c8de772df33df7fd8af6aee4d605aeb8ada
+    restart: unless-stopped
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: decision
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-demo-rabbit-pw}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+
+  keycloak:
+    image: keycloak/keycloak:26.8.0@sha256:b0f60d489d51c5d113390bdf5461d4c06e6051be026c05549f2e1e10ec352bcc
+    restart: unless-stopped
+    # DEMO: start-dev. The production file uses "start" (see compose.prod.yaml).
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-demo-keycloak-db}
+      KC_HOSTNAME: ${PUBLIC_ORIGIN:-http://localhost:${APP_PORT:-8480}}/auth
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-demo-keycloak-admin}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-demo-oidc-client-secret}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:${APP_PORT:-8480}}
+    volumes:
+      - ./infra/keycloak/realm-demo.json:/opt/keycloak/data/import/realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+  # One-shot: bucket + demo seed (APP_ENV=demo/test only). Production never seeds.
+  bootstrap:
+    <<: *backend
+    restart: "no"
+    command: ["python", "-m", "decision_evidence.tools.bootstrap"]
+    environment:
+      <<: [*db, *public, *oidc, *s3]
+      APP_ENV: ${APP_ENV:-demo}
+      DB_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD:-demo-migrator-pw}
+      DEMO_SEED: ${DEMO_SEED:-true}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      storage:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    environment:
+      <<: [*db, *public, *oidc, *s3, *ai]
+      APP_ENV: ${APP_ENV:-demo}
+      DB_AUTH_PASSWORD: ${DB_AUTH_PASSWORD:-demo-auth-pw}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:-demo-app-pw}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-demo-oidc-client-secret}
+      SECRET_KEY: ${SECRET_KEY:-ZGVtb2RlbW9kZW1vZGVtb2RlbW9kZW1vZGVtb2RlbW8=}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health/ready', timeout=4).status==200 else 1)"]
+      interval: 10s
+      timeout: 6s
+      retries: 20
+      start_period: 15s
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["celery", "-A", "decision_evidence.jobs.worker", "worker", "-B", "--loglevel=INFO", "--concurrency=2", "--schedule=/tmp/celerybeat-schedule", "--without-heartbeat", "--without-gossip", "--without-mingle"]
+    environment:
+      <<: [*db, *public, *s3, *ai]
+      APP_ENV: ${APP_ENV:-demo}
+      DB_WORKER_PASSWORD: ${DB_WORKER_PASSWORD:-demo-worker-pw}
+      RABBITMQ_URL: amqp://decision:${RABBITMQ_PASSWORD:-demo-rabbit-pw}@rabbitmq:5672/
+      JOB_LEASE_SECONDS: ${JOB_LEASE_SECONDS:-60}
+      JOB_HEARTBEAT_SECONDS: ${JOB_HEARTBEAT_SECONDS:-15}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,time,sys; d=json.load(open('/tmp/worker-alive')); sys.exit(0 if time.time()-d['ts']<120 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
+      start_period: 45s
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  outbox-publisher:
+    <<: *backend
+    command: ["python", "-m", "decision_evidence.jobs.publisher"]
+    environment:
+      <<: [*db, *public]
+      APP_ENV: ${APP_ENV:-demo}
+      DB_OUTBOX_PASSWORD: ${DB_OUTBOX_PASSWORD:-demo-outbox-pw}
+      RABBITMQ_URL: amqp://decision:${RABBITMQ_PASSWORD:-demo-rabbit-pw}@rabbitmq:5672/
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,time,sys; d=json.load(open('/tmp/publisher-alive')); sys.exit(0 if time.time()-d['ts']<30 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      secrets: [extra_ca]
+    image: decision-evidence-frontend:${DE_VERSION:-dev}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  gateway:
+    image: caddy:2.11.6-alpine@sha256:c776e0c6413b544d0459665e54ec7b8b2a15000c0cbee8b254da0067b1d184ff
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8480}:80"
+    environment:
+      SITE_ADDRESS: ":80"
+    volumes:
+      - ./infra/gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  seaweed-data:
+  rabbitmq-data:
+  caddy-data:
+
+secrets:
+  # optional CA bundle for builds behind TLS-inspecting proxies (empty by default)
+  extra_ca:
+    file: ${EXTRA_CA_BUNDLE:-/dev/null}

@@ -33,6 +33,10 @@ def make_celery() -> Celery:
             "cleanup-orphaned-files": {"task": TASK_CLEANUP, "schedule": 300.0},
         },
         worker_hijack_root_logger=False,
+        # RabbitMQ 4.x forbids the transient non-exclusive queues used by remote control (pidbox); we do not need them
+        worker_enable_remote_control=False,
+        worker_send_task_events=False,
+        worker_cancel_long_running_tasks_on_connection_loss=False,
     )
     return app
 

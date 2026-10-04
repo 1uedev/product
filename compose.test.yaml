@@ -1,0 +1,12 @@
+# Test overlay: docker compose -p de-test-<id> -f compose.yaml -f compose.test.yaml ...
+# Always started through scripts/test_integration.sh and scripts/test_e2e.sh, which pick an isolated project name and
+# ports and only ever remove their own project (never a project that is not named de-test-*).
+# APP_ENV=test (set by the scripts) additionally seeds the empty "E2E" workspace.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${TEST_DB_PORT:-55433}:5432"      # for the host-side pytest run; loopback only
+  worker:
+    environment:
+      JOB_LEASE_SECONDS: ${JOB_LEASE_SECONDS:-60}
+      JOB_HEARTBEAT_SECONDS: ${JOB_HEARTBEAT_SECONDS:-15}
