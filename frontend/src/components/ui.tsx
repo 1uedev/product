@@ -30,7 +30,7 @@ export function Spinner({ text = t.common.loading }: { text?: string }) {
 
 export function ErrorNotice({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const e = error instanceof ApiError ? error : null;
-  const forbidden = e?.status === 403;
+  const forbidden = e?.code === "forbidden";
   return (
     <div className="notice danger" role="alert">
       <strong>{forbidden ? t.common.forbidden : e?.message ?? t.common.loadError}</strong>

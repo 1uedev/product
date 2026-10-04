@@ -49,7 +49,11 @@ TENANTS = [
     ("lumen-demo", "Lumen Analytics GmbH (Demo)", {"alice": "owner", "dora": "admin", "bob": "editor", "vera": "viewer"}),
     ("fjord-demo", "Fjord Systems AG (Demo)", {"finn": "owner"}),
 ]
-E2E_TENANT = ("e2e-clean", "E2E Leerer Workspace (Test)", {"alice": "owner", "dora": "admin", "bob": "editor", "vera": "viewer"})
+E2E_MEMBERS = {"alice": "owner", "dora": "admin", "bob": "editor", "vera": "viewer"}
+E2E_TENANTS = [  # only created in APP_ENV=test: empty workspaces for the browser and resilience tests
+    ("e2e-clean", "E2E Leerer Workspace (Test)", E2E_MEMBERS),
+    ("e2e-resilience", "E2E Resilienz Workspace (Test)", E2E_MEMBERS),
+]
 
 
 def ensure_users_and_tenants(include_e2e: bool) -> dict[str, uuid.UUID]:
@@ -63,7 +67,7 @@ def ensure_users_and_tenants(include_e2e: bool) -> dict[str, uuid.UUID]:
                 s.add(u)
                 s.flush()
             users[key] = u.id
-        for slug, name, members in TENANTS + ([E2E_TENANT] if include_e2e else []):
+        for slug, name, members in TENANTS + (E2E_TENANTS if include_e2e else []):
             tid = tenant_uuid(slug)
             if s.get(m.Tenant, tid) is None:
                 s.add(m.Tenant(id=tid, slug=slug, name=name))
@@ -71,7 +75,7 @@ def ensure_users_and_tenants(include_e2e: bool) -> dict[str, uuid.UUID]:
             for ukey, role in members.items():
                 if s.get(m.Membership, (tid, users[ukey])) is None:
                     s.add(m.Membership(tenant_id=tid, user_id=users[ukey], role=role))
-    for slug, _n, _m in TENANTS + ([E2E_TENANT] if include_e2e else []):
+    for slug, _n, _m in TENANTS + (E2E_TENANTS if include_e2e else []):
         with tenant_session(get_engine("migrator"), tenant_uuid(slug)) as s:
             if s.scalar(select(m.TenantSettings.id)) is None:
                 s.add(m.TenantSettings(tenant_id=tenant_uuid(slug), is_demo=True))
