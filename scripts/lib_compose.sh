@@ -19,8 +19,16 @@ s.close()
 PY
 }
 
+# OLLAMA_OVERLAY=1 additionally starts the Ollama container of compose.ollama.yaml (see docs/operations/ollama.md)
+compose_files() {
+  printf '%s' "-f $ROOT/compose.yaml -f $ROOT/compose.test.yaml"
+  [ "${OLLAMA_OVERLAY:-0}" = "1" ] && printf '%s' " -f $ROOT/compose.ollama.yaml"
+  return 0
+}
+
 compose() {
-  docker compose -p "$TEST_PROJECT" -f "$ROOT/compose.yaml" -f "$ROOT/compose.test.yaml" "$@"
+  # shellcheck disable=SC2046
+  docker compose -p "$TEST_PROJECT" $(compose_files) "$@"
 }
 
 teardown_test_project() {

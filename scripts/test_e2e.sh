@@ -2,6 +2,7 @@
 # Browser end-to-end tests against a complete, freshly built stack in an isolated compose project (own volumes, own port).
 # Real Keycloak login, real API, worker, broker, storage. Usage: scripts/test_e2e.sh [playwright args]
 # Environment: KEEP_TEST_PROJECT=1 keeps the stack afterwards, TEST_PROJECT=de-test-xyz reuses a running stack,
+#              OLLAMA_OVERLAY=1 AI_PROVIDER=ollama OLLAMA_MODEL=<model> starts a real Ollama container too (then run: scripts/test_e2e.sh 40-ollama),
 #              CHROMIUM_PATH=/path/to/chrome uses an existing browser, EXTRA_CA_BUNDLE=/path/ca.pem for TLS-inspecting build networks.
 set -eu
 . "$(dirname "$0")/lib_compose.sh"
@@ -27,4 +28,6 @@ if [ -z "${CHROMIUM_PATH:-}" ] && ! ls "${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache
 fi
 export E2E_BASE_URL="http://localhost:$APP_PORT" E2E_COMPOSE_PROJECT="$TEST_PROJECT"
 export E2E_COMPOSE_FILES="$ROOT/compose.yaml:$ROOT/compose.test.yaml"
+[ "${OLLAMA_OVERLAY:-0}" = "1" ] && E2E_COMPOSE_FILES="$E2E_COMPOSE_FILES:$ROOT/compose.ollama.yaml"
+[ "${OLLAMA_OVERLAY:-0}" = "1" ] && export E2E_AI_PROVIDER=ollama
 pnpm exec playwright test "$@"

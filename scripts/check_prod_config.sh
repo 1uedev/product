@@ -31,4 +31,8 @@ for var in DB_APP_PASSWORD SECRET_KEY OIDC_CLIENT_SECRET PUBLIC_ORIGIN DE_VERSIO
   if docker compose -f "$ROOT/compose.prod.yaml" --env-file "$ENVF.missing" config -q 2>/dev/null; then echo "FAIL: missing $var was accepted"; rm -f "$ENVF.missing"; exit 1; fi
 done
 rm -f "$ENVF.missing"
-echo "production compose configuration: complete environment accepted, missing secrets rejected"
+# local model provider: the optional overlay points API and worker at the Ollama container
+rendered="$(AI_PROVIDER=ollama OLLAMA_MODEL=check-model docker compose -f "$ROOT/compose.prod.yaml" -f "$ROOT/compose.ollama.yaml" --env-file "$ENVF" config)"
+echo "$rendered" | grep -q "OLLAMA_BASE_URL: http://ollama:11434" || { echo "FAIL: overlay does not set the Ollama address"; exit 1; }
+echo "$rendered" | grep -q "OLLAMA_MODEL: check-model" || { echo "FAIL: OLLAMA_MODEL was not passed through"; exit 1; }
+echo "production compose configuration: complete environment accepted, missing secrets rejected, Ollama overlay renders"

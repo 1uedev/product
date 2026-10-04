@@ -44,13 +44,17 @@ def eligible_chunk_ids(s: Session, scope: str, limit: int) -> tuple[list[uuid.UU
 
 def analysis_key(settings: Settings, scope: str, chunk_ids: list[uuid.UUID]) -> str:
     h = hashlib.sha256()
-    for part in (scope, settings.ai_provider, settings.anthropic_model if settings.ai_provider == "anthropic" else "mock", *sorted(str(c) for c in chunk_ids)):
+    for part in (scope, settings.ai_provider, _model_name(settings), *sorted(str(c) for c in chunk_ids)):
         h.update(part.encode())
         h.update(b"|")
     return "analysis:" + h.hexdigest()[:40]
 
 
+def _model_name(settings: Settings) -> str:
+    return {"anthropic": settings.anthropic_model, "ollama": settings.ollama_model}.get(settings.ai_provider, "mock")
+
+
 def provider_label(settings: Settings) -> dict[str, Any]:
     if settings.ai_provider == "mock":
         return {"provider": "mock", "model": "demo-deterministic-v1", "demo": True}
-    return {"provider": "anthropic", "model": settings.anthropic_model, "demo": False}
+    return {"provider": settings.ai_provider, "model": _model_name(settings), "demo": False}

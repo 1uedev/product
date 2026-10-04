@@ -62,6 +62,21 @@ AI_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-ant-... ANTHROPIC_MODEL=<Modellname> 
 * Das Modell muss strukturierte Ausgaben unterstützen. Welche Daten übertragen werden, steht in [docs/architecture/ai-dataflow.md](docs/architecture/ai-dataflow.md).
 * **Mit der echten API wurde in dieser Arbeit nichts getestet** (kein Schlüssel). Siehe [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
+### Lokales Modell mit Ollama
+
+Wenn keine Daten an einen gehosteten Dienst gehen sollen, läuft die Analyse auch mit einem Modell auf der eigenen Hardware:
+
+```sh
+# Ollama läuft auf dem Docker-Host (muss aus Containern erreichbar sein) ...
+AI_PROVIDER=ollama OLLAMA_MODEL=qwen3:8b docker compose up --build -d
+# ... oder als zusätzlicher Container
+AI_PROVIDER=ollama OLLAMA_MODEL=qwen3:8b docker compose -f compose.yaml -f compose.ollama.yaml up --build -d
+docker compose -f compose.yaml -f compose.ollama.yaml exec ollama ollama pull qwen3:8b
+```
+
+Ein fehlendes Modell, ein zu großer Kontext oder ein nicht erreichbarer Server enden als sichtbarer Jobfehler, nie als stiller Wechsel auf die Demo-KI. Alle Einstellungen, Fehlerbilder und Grenzen:
+[docs/operations/ollama.md](docs/operations/ollama.md). **Eine echte Textgenerierung mit einem Modell wurde hier nicht getestet** (der Modell-Download war in der Entwicklungsumgebung gesperrt).
+
 ## Produktion (ein Server)
 
 `compose.prod.yaml` verlangt alle Geheimnisse, startet Keycloak im Produktionsmodus ohne Demo-Nutzer, terminiert HTTPS im Gateway und verweigert Demo-Werte.
@@ -92,6 +107,7 @@ Alle Testläufe verwenden isolierte Compose-Projekte mit dem Präfix `de-test-` 
 | Nur der Hauptablauf | `scripts/test_e2e.sh 10-main-flow` |
 | Backup und Restore in ein neues Projekt | `scripts/test_backup_restore.sh` |
 | Produktionskonfiguration (ohne Container) | `scripts/check_prod_config.sh` |
+| Lokales Modell: Fehlerbilder gegen einen echten Ollama-Server | `OLLAMA_TEST_URL=http://127.0.0.1:11434 uv run pytest ../tests/live` (im Ordner `backend`) |
 | Produktionsmodus: HTTPS, erster Nutzer, Einladung, sicheres Cookie (isoliertes Projekt, interne CA) | `scripts/test_prod_smoke.sh` |
 
 Lokale Entwicklung braucht Python 3.13 mit `uv` und Node 22 oder neuer mit `pnpm` (die Container nutzen Node 24). Ergebnisse der letzten Läufe: [docs/VERIFICATION.md](docs/VERIFICATION.md).
@@ -118,14 +134,14 @@ Restore schreibt nur in ein neues, leeres Projekt und löscht nie etwas. Details
 | [docs/architecture/domain-rules.md](docs/architecture/domain-rules.md) | fachliche Regeln und ihre Umsetzung |
 | [docs/architecture/suite-compatibility.md](docs/architecture/suite-compatibility.md) | Vorbereitung für eine spätere Produktsuite |
 | [docs/adr](docs/adr) | Entscheidungen: Versionen, Mandantentrennung, Auth, Jobs, Speicher, KI, Suche, Python-Stack |
-| [docs/operations](docs/operations) | Produktion, Betriebshandbuch, Backup/Restore, Kapazität und Grenzen |
+| [docs/operations](docs/operations) | Produktion, Betriebshandbuch, Backup/Restore, lokales Modell (Ollama), Kapazität und Grenzen |
 | [docs/openapi.json](docs/openapi.json) | OpenAPI (aus dem Code exportiert) |
 | [docs/examples](docs/examples/README.md) | Beispieldateien und Importregeln |
 
 ## Bekannte Grenzen (Kurzfassung)
 
 * Eine Instanz auf einem Server. Keine Hochverfügbarkeit, keine Lastmessung, kein Virenscan der Uploads.
-* Echter KI-Anbieter nicht getestet, Demo-KI ist kein Qualitätsnachweis.
+* Echter KI-Anbieter und echte lokale Modelle (Ollama) nicht mit Textgenerierung getestet, Demo-KI ist kein Qualitätsnachweis.
 * Keine Anbindung an CRM-, Ticket- oder andere Systeme; keine E-Mail-Zustellung (Einladungen sind Links).
 * Keine Rechtsberatung: Datenschutz- und Aufbewahrungspflichten bleiben beim Betreiber.
 

@@ -17,7 +17,7 @@ flowchart LR
     MQ --> W[Celery Worker + beat]
     W --> PG
     W --> S3
-    W -->|Port AIProvider| AI[mock oder Anthropic API]
+    W -->|Port AIProvider| AI[mock, Anthropic API oder lokales Ollama]
 ```
 
 ## Prozesse und Rollen

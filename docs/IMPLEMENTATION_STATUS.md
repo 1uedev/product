@@ -20,7 +20,8 @@ Der Demo-KI-Modus ist keine Bestätigung der Qualität eines echten Modells.
 | Jobs mit transaktionaler Outbox, Publisher mit Bestätigung, Lease, Retry, Wiederherstellung | ja | ja (Brokerausfall, Worker-Kill, Neustarts) | ja | `90-resilience.spec.ts`, `tests/integration/test_jobs.py` |
 | Objektspeicher (S3-Protokoll, SeaweedFS), Aufräumen verwaister Dateien | ja | ja | ja | |
 | Import: CSV (Kunden, Chancen, Feedback), Text-Notizen, Mapping, Vorschau, Fehler, Dubletten, Commit als Job | ja | ja | ja | Kein stiller Teilimport; Beispiele in `docs/examples` |
-| Analyse: Problemcluster vorschlagen, serverseitige Belegprüfung | ja | ja (Demo-KI) | **nein** | Anthropic-Adapter nur gegen SDK-Stub geprüft |
+| Analyse: Problemcluster vorschlagen, serverseitige Belegprüfung | ja | ja (Demo-KI) | **nein** | Anthropic-Adapter nur gegen SDK-Stub geprüft, Ollama siehe nächste Zeile |
+| Lokales Sprachmodell über Ollama (`AI_PROVIDER=ollama`), Compose-Overlay, Fehlerbilder, Größenprüfung des Kontextfensters | ja | ja (Fehlerpfade gegen simulierten Server und gegen einen echten Ollama-Server ohne Modell, ganzer Weg bis zur Oberfläche) | **nein** | keine Textgenerierung mit einem echten Modell getestet (Modell-Download gesperrt), siehe [Ollama-Betrieb](operations/ollama.md) |
 | Cluster korrigieren: zusammenführen, aufteilen, Belege verschieben/entfernen, Beziehung ändern, Historie | ja | ja | ja | Optimistische Sperre (`If-Match`) |
 | Kennzahlen: eindeutige Kunden, Aussagen, Segmente, Gegenbelege, ARR/Umsatz/Pipeline getrennt, Währungen getrennt, unbekannt ≠ 0, Dedup im Portfolio, Alter/Abdeckung | ja | ja | ja | `tests/unit/test_metrics.py`, Integrationsfluss |
 | Scoring: Policy (Gewichte, Fehlwertregel), Vergleich, Sensitivität ±25 % | ja | ja | ja | Deterministisch, ohne KI |
@@ -51,7 +52,8 @@ Getrennt vom Pflichtumfang, ohne Anspruch auf Umsetzung:
 8. Mehrsprachige Oberfläche, JSON- und PDF-Export.
 9. Aufbewahrungsfristen, Löschprozess für Betroffenenanfragen, Löschen ganzer Workspaces durch den Kunden.
 10. Verschlüsselte, zeitgesteuerte Sicherungen und Point-in-Time-Recovery.
-11. Prüfung des Anthropic-Adapters gegen die echte API (Qualität der Cluster und Entwürfe, Kosten, Rate Limits, Ablehnungen).
+11. Prüfung des Anthropic-Adapters gegen die echte API und des Ollama-Adapters mit einem installierten Modell (Qualität der Cluster und Entwürfe, Laufzeit, Schema-Treue, Kosten, Rate Limits, Ablehnungen).
+12. Zugangsschlüssel für einen Ollama-Server hinter einem authentifizierenden Proxy.
 
 ## Abweichungen von der Vorgabe
 

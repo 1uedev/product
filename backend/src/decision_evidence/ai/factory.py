@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from decision_evidence.ai.anthropic_provider import AnthropicProvider
 from decision_evidence.ai.mock import MockProvider
+from decision_evidence.ai.ollama_provider import OllamaProvider
 from decision_evidence.ai.port import AIProvider
 from decision_evidence.config import Settings, get_settings
 
@@ -12,6 +13,8 @@ def get_provider(settings: Settings | None = None) -> AIProvider:
     s = settings or get_settings()
     if s.ai_provider == "anthropic":
         return AnthropicProvider(s)
+    if s.ai_provider == "ollama":
+        return OllamaProvider(s)
     return MockProvider()
 
 

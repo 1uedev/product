@@ -64,10 +64,16 @@ class Settings(BaseSettings):
     s3_secret_key: SecretStr | None = None
 
     # --- AI
-    ai_provider: Literal["mock", "anthropic"] = "mock"
+    ai_provider: Literal["mock", "anthropic", "ollama"] = "mock"
     allow_mock_ai_in_production: bool = False
     anthropic_api_key: SecretStr | None = None
     anthropic_model: str = ""
+    # local models through an Ollama server (data never leaves the operator's network)
+    ollama_base_url: str = "http://host.docker.internal:11434"
+    ollama_model: str = ""
+    ollama_num_ctx: int = 8192
+    ollama_timeout_seconds: float = 300.0
+    ollama_keep_alive: str = "5m"
     ai_timeout_seconds: float = 60.0
     ai_max_retries: int = 2
     ai_max_output_tokens: int = 8000
@@ -142,6 +148,14 @@ class Settings(BaseSettings):
                 problems.append("ANTHROPIC_API_KEY is required when AI_PROVIDER=anthropic")
             if not self.anthropic_model:
                 problems.append("ANTHROPIC_MODEL is required when AI_PROVIDER=anthropic")
+        if self.ai_provider == "ollama" and ("ai" in needs or "api" in needs):
+            if not self.ollama_model:
+                problems.append("OLLAMA_MODEL is required when AI_PROVIDER=ollama")
+            ollama_url = urlparse(self.ollama_base_url)
+            if ollama_url.scheme not in {"http", "https"} or not ollama_url.netloc:
+                problems.append("OLLAMA_BASE_URL must be an absolute http(s) URL")
+            if not 512 <= self.ollama_num_ctx <= 1_048_576:
+                problems.append("OLLAMA_NUM_CTX must be between 512 and 1048576")
         if self.app_env == "production":
             problems.extend(self._production_problems(needs))
         if problems:

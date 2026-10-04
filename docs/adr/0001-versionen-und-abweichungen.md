@@ -17,6 +17,7 @@ Verwendet werden die Versionen, die in `backend/pyproject.toml`, `frontend/packa
 | SQLAlchemy / Alembic / psycopg | 2.1.3 / 1.20.0 / 3.3.6 | synchron, siehe ADR 0008 |
 | Celery / RabbitMQ | 5.6.3 / 4.3.6 (Digest festgelegt) | Fernsteuerung des Workers abgeschaltet, weil RabbitMQ 4.3 die dafür nötigen Queues nicht mehr zulässt |
 | boto3 / anthropic SDK | 1.43.108 / 1.11.0 | S3-Zugriff / KI-Adapter |
+| Ollama (optional) | 0.35.1 (`ollama/ollama:0.35.1`, Digest festgelegt) | lokales Modell, siehe ADR 0009 |
 | Keycloak | 26.8.0 (Digest festgelegt) | Demo: `start-dev` mit Realm-Import. Produktion: `start` mit Umgebungsvariablen-Ersetzung |
 | SeaweedFS | 4.48 (Digest festgelegt) | S3-kompatibel; Zugriff nur über das S3-Protokoll |
 | Caddy | 2.11.6 (Digest festgelegt) | Gateway, HTTPS per ACME oder `tls internal` |

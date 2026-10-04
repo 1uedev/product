@@ -9,7 +9,7 @@ from sqlalchemy import text
 from decision_evidence.db.engines import get_engine
 from decision_evidence.storage.s3 import get_storage
 
-EXPECTED_SCHEMA_REVISION = "0004"  # kept in sync with migrations/versions by tests/integration/test_schema.py
+EXPECTED_SCHEMA_REVISION = "0005"  # kept in sync with migrations/versions by tests/integration/test_schema.py
 
 router = APIRouter(tags=["health"])
 

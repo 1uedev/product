@@ -8,7 +8,7 @@ sequenceDiagram
     participant O as Outbox-Publisher
     participant Q as RabbitMQ
     participant W as Worker
-    participant P as AIProvider (mock oder Anthropic)
+    participant P as AIProvider (mock, Anthropic oder Ollama)
     U->>A: POST /analysis (CSRF, Rolle editor)
     A->>DB: Budget und Limits prüfen, Job + Outbox-Zeile (eine Transaktion)
     A-->>U: 202 + Job-ID + Status-URL
@@ -53,4 +53,7 @@ beides sichtbar als KI-Ergebnis. Entscheidung und Freigabe bleiben menschlich (V
 * `AI_PROVIDER=anthropic`: offizielles SDK, strukturierte Ausgabe über `messages.parse` mit Pydantic-Schema, Modell aus `ANTHROPIC_MODEL`, Timeout und begrenzte Wiederholungen,
   Größenlimit für den Kontext, monatliches Aufrufbudget je Mandant. Fehler (Timeout, Rate-Limit, Ablehnung) enden als sichtbarer Jobfehler, **nie** als stiller Wechsel auf den Demo-Adapter.
   Kosten werden nur gespeichert, wenn `AI_PRICE_INPUT_PER_MTOK` und `AI_PRICE_OUTPUT_PER_MTOK` konfiguriert sind.
-* Geprüft: Anfrageaufbau, Fehlerabbildung und Ablehnungsbehandlung gegen einen Stub des SDK-Clients (`tests/unit/test_ai.py`). **Nicht geprüft:** echte Aufrufe (kein API-Schlüssel im Test).
+* `AI_PROVIDER=ollama`: lokales Modell über die HTTP-API eines Ollama-Servers, Ausgabe per JSON-Schema erzwungen, `temperature=0`, ohne Werkzeuge. Derselbe Prompt, dieselbe serverseitige Prüfung, dieselben Fehlercodes.
+  Der Prompt geht an `OLLAMA_BASE_URL` (eigener Rechner oder Container), nicht ins Internet. Zu große Prompts werden abgelehnt statt still gekürzt. Details: [Ollama-Betrieb](../operations/ollama.md).
+* Geprüft: Anfrageaufbau, Fehlerabbildung und Ablehnungsbehandlung gegen einen Stub des SDK-Clients (`tests/unit/test_ai.py`) und für Ollama gegen einen simulierten Server sowie einen echten Ollama-Server ohne Modell.
+  **Nicht geprüft:** echte Aufrufe von Anthropic (kein API-Schlüssel) und echte Textgenerierung mit einem Ollama-Modell (Modell-Download gesperrt).

@@ -1,6 +1,6 @@
 # Datenmodell
 
-Alle Tabellen entstehen durch die Alembic-Migrationen in `backend/migrations/sql/` (0001 bis 0004). Die ORM-Modelle in
+Alle Tabellen entstehen durch die Alembic-Migrationen in `backend/migrations/sql/` (0001 bis 0005). Die ORM-Modelle in
 `backend/src/decision_evidence/db/models.py` spiegeln sie; `tests/integration/test_schema.py` schlägt fehl, wenn Spalten auseinanderlaufen.
 
 ## Schemas
@@ -65,7 +65,7 @@ Spaltenlisten wie in der Aufgabe; Ergänzungen sind **fett**.
 | `app.source_records` | eine Quelle (Feedbackzeile, Notiz, Dokument) mit `origin` original/imported/synthetic, `content_hash` (UNIQUE je Mandant = Dublettenschutz), `metadata` JSONB. **`import_batch_id`, `source_kind`** |
 | `app.source_chunks` | Fundstellen: `ordinal`, `text`, `locator` JSONB (Datei, Zeile, Seite, Absatz). **`search_vector`** (generierte tsvector, GIN) für die Volltextsuche |
 | `app.jobs` | Hintergrundaufgaben, `UNIQUE (tenant_id, kind, idempotency_key)`, Lease (`lease_expires_at`, **`claim_token`**), Versuche. **`max_attempts`, `error_message`, `correlation_id`** |
-| `app.ai_runs` | jeder KI-Aufruf: Anbieter, Modell, Prompt-Version, Eingabe-Hash, Tokens, Dauer. Kosten (`estimated_cost`, Währung) nur bei konfigurierter Preisbasis (`price_basis`). **`purpose`, `verification`** (Ergebnis der serverseitigen Belegprüfung) |
+| `app.ai_runs` | jeder KI-Aufruf: Anbieter (`mock`, `anthropic`, `ollama`), Modell, Prompt-Version, Eingabe-Hash, Tokens, Dauer. Kosten (`estimated_cost`, Währung) nur bei konfigurierter Preisbasis (`price_basis`). **`purpose`, `verification`** (Ergebnis der serverseitigen Belegprüfung) |
 | `app.audit_events` | nur anhängbar (Trigger verbietet UPDATE/DELETE, Rolle ohne diese Rechte). **`request_id`** |
 | `infra.outbox` | nur Vermittlungsmetadaten (Job-ID, Ereignistyp, Schema-Version, Verfügbarkeit, Versuche). **`correlation_id`** |
 | `app.customer_accounts` | `commercial_value NUMERIC(18,2)` nullable, `value_basis` arr/annual_sales/unknown, ISO-Währung. CHECK: bekannter Wert braucht Basis und Währung, `unknown` trägt nie eine Zahl (kein erfundenes 0) |

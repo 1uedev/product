@@ -11,7 +11,7 @@ trap teardown_test_project EXIT
 echo "== project $TEST_PROJECT, postgres on 127.0.0.1:$TEST_DB_PORT"
 compose up -d --wait postgres
 compose up --no-deps --exit-code-from db-init db-init
-compose run --rm --no-deps migrate
+compose run --build --rm --no-deps migrate
 
 cd "$ROOT/backend"
 export DB_HOST=127.0.0.1 DB_PORT="$TEST_DB_PORT" DB_NAME=decision_evidence

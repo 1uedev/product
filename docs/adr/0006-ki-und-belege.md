@@ -10,5 +10,7 @@ Status: angenommen
 * Kein stiller Rückfall: Fehler des echten Anbieters werden sichtbar, nicht durch den Demo-Adapter ersetzt.
 * Jeder Aufruf wird in `app.ai_runs` protokolliert (Anbieter, Modell, Prompt-Version, Eingabe-Hash, Tokens, Prüfergebnis). Prompt-Inhalte werden nicht im Log ausgegeben.
 
+* Weitere Adapter folgen demselben Muster, siehe [ADR 0009](0009-lokales-modell-ueber-ollama.md) für ein lokales Modell über Ollama.
+
 ## Folgen
 Ein Modell kann Belege nicht erfinden, weil unverifizierte Verweise verworfen werden; es kann aber weiterhin schlecht clustern oder gewichten. Deshalb korrigiert der Mensch Cluster und bestätigt Belege (`human_verified`). Die Qualität des Anthropic-Adapters im Echtbetrieb ist nicht gemessen (siehe `docs/VERIFICATION.md`).

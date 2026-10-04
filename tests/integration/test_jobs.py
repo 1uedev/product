@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 import datetime as dt
+import html
+import json
+import re
 import uuid
 from types import SimpleNamespace
 
+import httpx
 import pytest
 from sqlalchemy import select, text
 
 from conftest import Api, import_demo, run_jobs  # type: ignore[import-not-found]
 from decision_evidence.ai.mock import MockProvider
+from decision_evidence.ai.ollama_provider import OllamaProvider
 from decision_evidence.ai.schemas import ProviderError
+from decision_evidence.config import Settings
 from decision_evidence.db import models as m
 from decision_evidence.db.engines import get_engine
 from decision_evidence.db.session import plain_session, tenant_session
@@ -271,3 +277,51 @@ def test_import_commit_is_all_or_nothing_when_the_worker_fails_midway(workspace,
     assert runner.execute_job(tid, uuid.UUID(ed.get(f"/imports/{b['id']}").json()["job_id"])) == "succeeded"
     assert ed.get("/customers").json()["total"] == 3
     assert ed.get(f"/imports/{b['id']}").json()["status"] == "committed"
+
+
+# ----------------------------------------------------------------------------- local model (Ollama)
+def _ollama(handler) -> OllamaProvider:  # type: ignore[no-untyped-def]
+    client = httpx.Client(base_url="http://ollama.test:11434", transport=httpx.MockTransport(handler))
+    return OllamaProvider(Settings(ai_provider="ollama", ollama_model="qwen3:8b", ollama_base_url="http://ollama.test:11434"), client=client)
+
+
+def _answer_from_prompt(request: httpx.Request) -> httpx.Response:
+    """Plays the model: reads the chunks from the prompt, groups the first ones and quotes them. One quote is invented."""
+    user = json.loads(request.content)["messages"][1]["content"]
+    found = re.findall(r'<chunk id="([0-9a-f-]{36})">(.*?)</chunk>', user, flags=re.S)
+    assert found, "the prompt must contain the data chunks"
+    first = [(cid, html.unescape(text_)) for cid, text_ in found[:2]]
+    evidence = [{"source_chunk_id": cid, "quote": t.strip()[:60], "relation": "supports"} for cid, t in first]
+    evidence.append({"source_chunk_id": first[0][0], "quote": "dieses Zitat steht nirgends im Text", "relation": "supports"})
+    body = {"problems": [{"title": "Lokal vorgeschlagenes Problem", "description": "von einem lokalen Modell", "evidence": evidence}]}
+    return httpx.Response(200, json={"message": {"role": "assistant", "content": json.dumps(body)}, "done": True, "done_reason": "stop",
+                                     "prompt_eval_count": 700, "eval_count": 120})
+
+
+def test_analysis_with_a_local_model_stores_only_verified_proposals(workspace, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    tid = workspace["tenant"].id
+    ed, job_id = _start_analysis(workspace)
+    monkeypatch.setattr("decision_evidence.modules.analysis.jobs.get_provider", lambda _s: _ollama(_answer_from_prompt))
+    assert runner.execute_job(tid, job_id) == "succeeded"
+    problems = ed.get("/problems").json()["items"]
+    assert [p["title"] for p in problems] == ["Lokal vorgeschlagenes Problem"]
+    detail = ed.get(f"/problems/{problems[0]['id']}").json()
+    assert len(detail["evidence"]) == 2                       # the invented quote was dropped by the server side verification
+    with tenant_session(get_engine("app"), tid) as s:
+        run = s.scalars(select(m.AiRun).where(m.AiRun.job_id == job_id)).one()
+        assert (run.provider, run.model, run.status) == ("ollama", "qwen3:8b", "succeeded")
+        assert run.input_tokens == 700 and run.output_tokens == 120 and run.estimated_cost is None
+        assert run.verification["rejected_evidence"]
+
+
+def test_missing_local_model_fails_visibly_without_retries_and_without_demo_fallback(workspace, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    tid = workspace["tenant"].id
+    ed, job_id = _start_analysis(workspace)
+    monkeypatch.setattr("decision_evidence.modules.analysis.jobs.get_provider",
+                        lambda _s: _ollama(lambda r: httpx.Response(404, json={"error": "model 'qwen3:8b' not found"})))
+    assert runner.execute_job(tid, job_id) == "failed"
+    j = _job(tid, job_id)
+    assert j.status == "failed" and j.error_code == "ai_model_missing" and j.attempts == 1 and "ollama pull" in (j.error_message or "")
+    assert ed.get("/problems").json()["total"] == 0
+    with tenant_session(get_engine("app"), tid) as s:
+        assert {(r.provider, r.status) for r in s.scalars(select(m.AiRun).where(m.AiRun.job_id == job_id))} == {("ollama", "failed")}

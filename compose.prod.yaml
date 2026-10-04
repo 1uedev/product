@@ -33,9 +33,17 @@ x-s3: &s3
   S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY (see .env.example)}
 
 x-ai: &ai
-  AI_PROVIDER: ${AI_PROVIDER:?set AI_PROVIDER=anthropic}
+  AI_PROVIDER: ${AI_PROVIDER:?set AI_PROVIDER=anthropic or ollama}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+  # AI_PROVIDER=ollama: local model served by Ollama on the host (default) or by the optional compose.ollama.yaml overlay
+  OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+  OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-8192}
+  OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-300}
+  OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
+  AI_MAX_INPUT_CHARS: ${AI_MAX_INPUT_CHARS:-120000}
+  AI_MAX_OUTPUT_TOKENS: ${AI_MAX_OUTPUT_TOKENS:-8000}
   MOCK_AI_DELAY_SECONDS: "0"
 
 services:
@@ -171,6 +179,8 @@ services:
 
   api:
     <<: *backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach an Ollama server running on the host (AI_PROVIDER=ollama)
     environment:
       <<: [*db, *public, *oidc, *s3, *ai]
       APP_ENV: production
@@ -190,6 +200,8 @@ services:
 
   worker:
     <<: *backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach an Ollama server running on the host (AI_PROVIDER=ollama)
     command: ["celery", "-A", "decision_evidence.jobs.worker", "worker", "-B", "--loglevel=INFO", "--concurrency=2", "--schedule=/tmp/celerybeat-schedule", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     environment:
       <<: [*db, *public, *s3, *ai]

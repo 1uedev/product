@@ -20,6 +20,13 @@ def test_production_accepts_strong_configuration() -> None:
     prod().validate_for_runtime(needs={"api", "broker", "storage", "ai"})
 
 
+def test_production_accepts_the_local_model_provider_without_cloud_credentials() -> None:
+    cfg = prod(ai_provider="ollama", ollama_model="qwen3:8b", ollama_base_url="http://ollama:11434", anthropic_api_key=None, anthropic_model="")
+    cfg.validate_for_runtime(needs={"api", "broker", "storage", "ai"})
+    with pytest.raises(ConfigError):
+        prod(ai_provider="ollama", ollama_model="").validate_for_runtime(needs={"api", "broker", "storage", "ai"})
+
+
 @pytest.mark.parametrize("override", [
     {"db_app_password": "demo-password-change-me"}, {"public_origin": "http://decisions.example.org"}, {"ai_provider": "mock"},
     {"oidc_issuer": "http://localhost:8080/realms/x"}, {"secret_key": "short"}, {"oidc_client_secret": "changeme-changeme-changeme"},

@@ -44,7 +44,7 @@ export default function SettingsPage() {
         <section className="card"><h2>Scoring-Policies</h2>
           <Async q={policies}>{(d) => <ul>{d.map((p) => <li key={p.id}><strong>{p.name}</strong> {p.active ? <Badge kind="ok">aktiv</Badge> : <button className="btn small" onClick={() => activate.mutate(p.id)}>Aktivieren</button>}<div className="small muted">{Object.entries(p.weights).map(([k, v]) => `${t.criteria[k]}: ${String(v)}`).join(", ")}; fehlende Werte: {p.missing_value_policy}; Währung {String((p.parameters as Record<string, unknown>).currency)}</div></li>)}</ul>}</Async>
           <p className="small muted">Neue Policies legen Sie über die API an (POST /scoring-policies). Gewichte müssen sich zu 1 summieren und dürfen nur die definierten Kriterien enthalten.</p>
-          <h3>KI-Anbieter</h3><p>{ws.ai.demo ? "Demo-Adapter (deterministisch, ohne externe Aufrufe)." : `Anthropic, Modell ${ws.ai.model}.`}</p>
+          <h3>KI-Anbieter</h3><p>{ws.ai.demo ? "Demo-Adapter (deterministisch, ohne externe Aufrufe)." : ws.ai.provider === "ollama" ? `Ollama (lokales Modell ${ws.ai.model}), Daten verlassen den eigenen Server nicht.` : `Anthropic, Modell ${ws.ai.model}.`}</p>
         </section>
       </div>
     </>
