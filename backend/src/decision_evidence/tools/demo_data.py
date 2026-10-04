@@ -254,8 +254,8 @@ def generate(profile: str = "full", seed: int = 42) -> DemoDataset:
     for i, st in enumerate(dup_src):
         rows.append([f"T-{20000 + i}", st.customer_ext, "", "email", (st.day + timedelta(days=9)).isoformat(), st.text.upper() if i % 2 else f"  {st.text}  ", "de"])
 
-    cust_rows = [[c[0], c[1], c[2], c[3], "" if c[4] is None else c[4], "" if c[4] is None else c[5], "" if c[6] is None else c[6], c[7] or ""] for c in customers]
-    opp_rows = [list(o) for o in opps]
+    cust_rows: list[list[object]] = [[c[0], c[1], c[2], c[3], "" if c[4] is None else c[4], "" if c[4] is None else c[5], "" if c[6] is None else c[6], c[7] or ""] for c in customers]
+    opp_rows: list[list[object]] = [list(o) for o in opps]
     return DemoDataset(
         customers_csv=_csv(["external_id", "name", "segment", "country", "commercial_value", "value_basis", "currency", "value_as_of"], cust_rows),
         opportunities_csv=_csv(["external_id", "customer_external_id", "name", "stage", "amount", "currency", "closed_at"], opp_rows),

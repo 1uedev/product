@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import and_, exists, func, or_, select, text
@@ -44,7 +44,7 @@ def _like(q: str) -> str:
 def list_customers(ctx: Annotated[TenantContext, viewer], paging: Annotated[Paging, Depends()], q: Annotated[str | None, Query(max_length=200)] = None,
                    segment: str | None = None, value_known: bool | None = None) -> Page[CustomerOut]:
     with ctx.session() as s:
-        cond = []
+        cond: list[Any] = []
         if q:
             cond.append(or_(m.CustomerAccount.name.ilike(_like(q)), m.CustomerAccount.external_id.ilike(_like(q))))
         if segment:
@@ -78,7 +78,7 @@ class OpportunityOut(BaseModel):
 def list_opportunities(ctx: Annotated[TenantContext, viewer], paging: Annotated[Paging, Depends()], stage: Literal["open", "won", "lost", "no_decision"] | None = None,
                        customer_id: uuid.UUID | None = None, q: Annotated[str | None, Query(max_length=200)] = None) -> Page[OpportunityOut]:
     with ctx.session() as s:
-        cond = []
+        cond: list[Any] = []
         if stage:
             cond.append(m.Opportunity.stage == stage)
         if customer_id:
@@ -140,8 +140,8 @@ def search_feedback(ctx: Annotated[TenantContext, viewer], paging: Annotated[Pag
                     customer_id: uuid.UUID | None = None, channel: str | None = None, assigned: bool | None = None,
                     problem_id: uuid.UUID | None = None, date_from: datetime | None = None, date_to: datetime | None = None) -> Page[FeedbackOut]:
     with ctx.session() as s:
-        cond = []
-        order = [m.FeedbackItem.occurred_at.desc(), m.FeedbackItem.id]
+        cond: list[Any] = []
+        order: list[Any] = [m.FeedbackItem.occurred_at.desc(), m.FeedbackItem.id]
         if q and q.strip():
             tsq = func.websearch_to_tsquery("german", q)
             cond.append(or_(m.FeedbackItem.search_vector.op("@@")(tsq), m.FeedbackItem.body.ilike(_like(q.strip()))))
@@ -210,7 +210,7 @@ class SourceDetail(SourceOut):
 def list_sources(ctx: Annotated[TenantContext, viewer], paging: Annotated[Paging, Depends()], q: Annotated[str | None, Query(max_length=200)] = None,
                  kind: Literal["csv_feedback", "note_text", "document"] | None = None, origin: Literal["original", "imported", "synthetic"] | None = None) -> Page[SourceOut]:
     with ctx.session() as s:
-        cond = []
+        cond: list[Any] = []
         if q:
             cond.append(m.SourceRecord.title.ilike(_like(q)))
         if kind:

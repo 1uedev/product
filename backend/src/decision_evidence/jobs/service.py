@@ -32,11 +32,11 @@ def enqueue_job(s: Session, *, kind: str, idempotency_key: str, payload: dict[st
         if running >= max_running:
             raise ApiError(429, "too_many_jobs", "Zu viele laufende Aufgaben",
                            f"Es laufen bereits {running} Aufgaben (Limit {max_running}). Bitte später erneut versuchen.")
-    stmt = (pg_insert(m.Job.__table__).values(
+    stmt = (pg_insert(m.Job).values(
         id=uuid.uuid4(), tenant_id=s.info["tenant_id"], kind=kind, idempotency_key=idempotency_key, payload=payload,
         requested_by=requested_by, correlation_id=current_request_id.get())
         .on_conflict_do_nothing(index_elements=["tenant_id", "kind", "idempotency_key"])
-        .returning(m.Job.__table__.c.id))
+        .returning(m.Job.id))
     new_id = s.execute(stmt).scalar()
     if new_id is None:  # lost a race against a concurrent identical request
         existing = s.scalar(select(m.Job).where(m.Job.kind == kind, m.Job.idempotency_key == idempotency_key))

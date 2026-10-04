@@ -12,7 +12,14 @@ from sqlalchemy import func, select
 from decision_evidence.db import models as m
 from decision_evidence.errors import bad_request, conflict, not_found
 from decision_evidence.identity import repository as identity
-from decision_evidence.modules.common import Page, Paging, check_version, etag, require_if_match, tenant_settings
+from decision_evidence.modules.common import (
+    Page,
+    Paging,
+    check_version,
+    etag,
+    require_if_match,
+    tenant_settings,
+)
 from decision_evidence.modules.metrics import service as metrics_service
 from decision_evidence.modules.scoring import domain as sd
 from decision_evidence.modules.scoring import service as scoring_service

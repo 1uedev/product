@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from sqlalchemy import text
 
+from decision_evidence.db import models  # noqa: F401
 from decision_evidence.db.base import Base
 from decision_evidence.db.engines import get_engine
-from decision_evidence.db import models  # noqa: F401
 
 EXPECTED_APP_TABLES = {
     "files", "source_records", "source_chunks", "jobs", "ai_runs", "audit_events",
@@ -98,3 +98,16 @@ def test_tenant_composite_foreign_keys_everywhere(conn) -> None:  # type: ignore
     assert rows
     for table, name, ncols, has_tenant in rows:
         assert ncols == 2 and has_tenant, f"{table}.{name} must be a composite (tenant_id, id) foreign key"
+
+
+def test_expected_schema_revision_matches_the_alembic_head() -> None:
+    from pathlib import Path
+
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    from decision_evidence.observability.health import EXPECTED_SCHEMA_REVISION
+
+    cfg = Config()
+    cfg.set_main_option("script_location", str(Path(__file__).resolve().parents[2] / "backend" / "migrations"))
+    assert ScriptDirectory.from_config(cfg).get_current_head() == EXPECTED_SCHEMA_REVISION

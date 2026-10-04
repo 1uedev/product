@@ -11,6 +11,10 @@ os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("PUBLIC_ORIGIN", "http://localhost:8480")
 
 
+def pytest_configure(config):  # type: ignore[no-untyped-def]
+    config.addinivalue_line("markers", "integration: needs a real PostgreSQL (see scripts/test_integration.sh)")
+
+
 def pytest_collection_modifyitems(config, items):  # type: ignore[no-untyped-def]
     for item in items:
         if "integration" in str(item.fspath):

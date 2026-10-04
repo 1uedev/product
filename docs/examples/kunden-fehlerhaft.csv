@@ -1,0 +1,4 @@
+ID;Firma;Land;ARR;Währung;Wertbasis
+C1;Müller GmbH;DE;1.234,50;EUR;arr
+C2;Meier AG;DEU;abc;EUR;arr
+C3;Keller;CH;;;

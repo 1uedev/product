@@ -12,7 +12,13 @@ from decision_evidence.db import models as m
 from decision_evidence.errors import bad_request, not_found
 from decision_evidence.identity import repository as identity
 from decision_evidence.modules.common import (
-    Page, Paging, check_version, etag, require_if_match, tenant_settings, to_csv,
+    Page,
+    Paging,
+    check_version,
+    etag,
+    require_if_match,
+    tenant_settings,
+    to_csv,
 )
 from decision_evidence.modules.metrics import domain as md
 from decision_evidence.modules.metrics import service as metrics_service
@@ -317,7 +323,6 @@ def delete_evidence(ctx: Annotated[TenantContext, editor], evidence_id: uuid.UUI
 def export_problems(ctx: Annotated[TenantContext, viewer]) -> Response:
     with ctx.session() as s:
         problems = list(s.scalars(select(m.Problem).where(m.Problem.status != "archived").order_by(m.Problem.title)))
-        stats = metrics_service.list_stats(s, [p.id for p in problems])
         customers, opps = metrics_service.load_universe(s)
         fresh = tenant_settings(s).evidence_fresh_days
         rows = []

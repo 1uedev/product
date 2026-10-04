@@ -11,7 +11,7 @@ Rules enforced here (specification, "Verbindliche fachliche Regeln"):
 from __future__ import annotations
 
 import statistics
-from collections import Counter, defaultdict
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime

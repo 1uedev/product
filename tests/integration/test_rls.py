@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from decision_evidence.db import models as m
 from decision_evidence.db.engines import get_engine
-from decision_evidence.db.session import plain_session, tenant_session
+from decision_evidence.db.session import plain_session
 
 
 def test_tenant_a_cannot_read_tenant_b(seeded, app_session) -> None:  # type: ignore[no-untyped-def]

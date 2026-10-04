@@ -96,7 +96,7 @@ def upload(ctx: Annotated[TenantContext, editor], kind: Annotated[Kind, Form()],
         purpose, media_type = p.validate_upload(name, file.content_type, data[:max_bytes])
     except p.FileRejected as exc:
         raise ApiError(422, exc.code, "Datei nicht verwendbar", exc.message) from exc
-    if kind in p.CSV_KINDS and purpose != "import_csv" or kind == "document" and purpose != "import_document":
+    if (kind in p.CSV_KINDS and purpose != "import_csv") or (kind == "document" and purpose != "import_document"):
         raise bad_request("kind_file_mismatch", "Dateityp passt nicht zur Importart")
     return _create(ctx, kind, name, media_type, purpose, data, {"synthetic": synthetic})
 

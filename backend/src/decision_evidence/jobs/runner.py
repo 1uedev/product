@@ -75,7 +75,7 @@ class JobContext:
             update(m.Job).where(m.Job.id == self.job_id, m.Job.claim_token == self.claim_token, m.Job.status == "running")
             .values(status="succeeded", progress=100, result=result, finished_at=datetime.now(UTC), lease_expires_at=None,
                     claim_token=None, error_code=None, error_message=None))
-        if res.rowcount != 1:
+        if res.rowcount != 1:  # type: ignore[attr-defined]
             raise LeaseLost()
 
 
@@ -129,7 +129,7 @@ class Heartbeat(threading.Thread):
                     if res.rowcount != 1:
                         self.ctx._lease_lost.set()
                         return
-            except Exception:  # noqa: BLE001
+            except Exception:
                 log.exception("heartbeat failed")
 
     def stop(self) -> None:
@@ -182,7 +182,7 @@ def execute_job(tenant_id: uuid.UUID, job_id: uuid.UUID) -> str:
             outcome = _fail_or_retry(ctx, exc)
             log.warning("job error", extra={"code": exc.code, "outcome": outcome})
             return outcome
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.error("unexpected job failure: %s", traceback.format_exc())
             return _fail_or_retry(ctx, JobError("internal_error", f"Unerwarteter Fehler ({type(exc).__name__})", retryable=True))
         finally:

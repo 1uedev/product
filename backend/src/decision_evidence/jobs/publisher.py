@@ -52,7 +52,7 @@ def publish_one() -> bool:
             try:
                 get_celery().send_task(TASK_RUN_JOB, args=[envelope], queue=QUEUE, task_id=str(uuid.uuid4()),
                                        headers={"correlation_id": row["correlation_id"]})
-            except Exception as exc:  # noqa: BLE001 - broker down, timeouts, ...
+            except Exception as exc:
                 attempts = row["attempts"] + 1
                 backoff = min(60, 2 ** min(attempts, 6))
                 conn.execute(text(
@@ -78,7 +78,7 @@ def main() -> None:
         try:
             worked = publish_one()
             HEARTBEAT_FILE.write_text(json.dumps({"ts": time.time()}))
-        except Exception:  # noqa: BLE001
+        except Exception:
             log.exception("publisher loop error")
             worked = False
             time.sleep(2)

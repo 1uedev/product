@@ -20,7 +20,7 @@ def _database_available() -> None:
         with get_engine("migrator").connect() as conn:
             conn.execute(text("select 1"))
             version = conn.execute(text("select version_num from infra.alembic_version")).scalar()
-    except (OperationalError, Exception) as exc:  # noqa: BLE001
+    except (OperationalError, Exception) as exc:
         pytest.skip(f"PostgreSQL with migrations not available: {exc.__class__.__name__}", allow_module_level=False)
     assert version, "alembic version missing"
     get_settings()
@@ -97,15 +97,15 @@ def seeded(make_tenant, app_session) -> Iterator[dict]:  # type: ignore[no-untyp
 
 
 # --------------------------------------------------------------------------- API-level fixtures
-import re  # noqa: E402
+import re
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from decision_evidence.identity import repository as identity_repo  # noqa: E402
-from decision_evidence.jobs import handlers as _handlers  # noqa: E402,F401
-from decision_evidence.jobs.runner import execute_job  # noqa: E402
-from decision_evidence.storage.memory import MemoryStorage  # noqa: E402
-from decision_evidence.storage.s3 import set_storage_override  # noqa: E402
+from decision_evidence.identity import repository as identity_repo
+from decision_evidence.jobs import handlers as _handlers  # noqa: F401
+from decision_evidence.jobs.runner import execute_job
+from decision_evidence.storage.memory import MemoryStorage
+from decision_evidence.storage.s3 import set_storage_override
 
 
 @pytest.fixture(autouse=True)

@@ -59,7 +59,7 @@ def to_markdown(doc: m.DecisionDocument, evidence: list[dict[str, Any]], names: 
     out.append("")
     out.append(f"- **Status:** {STATE_DE[doc.state]}")
     if doc.approved_at:
-        out.append(f"- **Freigegeben von:** {names.get(doc.approved_by, 'unbekannt')} am {doc.approved_at.isoformat(timespec='minutes')} ({tz_note})")
+        out.append(f"- **Freigegeben von:** {names.get(doc.approved_by, 'unbekannt') if doc.approved_by else 'unbekannt'} am {doc.approved_at.isoformat(timespec='minutes')} ({tz_note})")
     out.append(f"- **Initiative:** {snap['initiative']['title']}")
     out.append(f"- **Problem:** {snap['problem']['title']}")
     out.append(f"- **Belegstand eingefroren am:** {snap['taken_at']}")
@@ -80,7 +80,6 @@ def to_markdown(doc: m.DecisionDocument, evidence: list[dict[str, Any]], names: 
         out.append(f"- Hinweis: {w['message']}")
     out.append("")
     out.append("## Handlungsoptionen")
-    results = {r["name"]: r for r in sc.get("results", [])}
     for opt in doc.options:
         out.append(f"### Option {opt['key']}: {opt['name']}")
         if opt.get("description"):

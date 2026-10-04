@@ -256,7 +256,7 @@ def test_decision_lifecycle_four_eyes_immutability_and_new_revision(workspace) -
     assert snap["evidence_snapshot"]["metrics"]["supporting_customers"] >= 2 and len(snap["scoring_snapshot"]["results"]) == 2
     assert snap["scoring_snapshot"]["sensitivity"]["scenarios"], "sensitivity shown"
     r1 = snap["scoring_snapshot"]["results"][0]
-    assert r1["total"] is not None and any(c["status"] == "excluded" for c in r1["contributions"]) or r1["missing"] is not None
+    assert (r1["total"] is not None and any(c["status"] == "excluded" for c in r1["contributions"])) or r1["missing"] is not None
     # scoring is reproducible: refreshing without data changes gives identical scores
     again = ed.post(f"/decisions/{did}/snapshot").json()
     assert [x["total"] for x in again["scoring_snapshot"]["results"]] == [x["total"] for x in snap["scoring_snapshot"]["results"]]

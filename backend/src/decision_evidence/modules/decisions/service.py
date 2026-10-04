@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.orm import Session
 
 from decision_evidence.db import models as m
@@ -159,7 +159,7 @@ def refresh_snapshot(s: Session, doc: m.DecisionDocument) -> None:
     ev_snapshot, sc_snapshot, rows = build_snapshots(s, doc, policy_row)
     s.execute(delete(m.DecisionEvidence).where(m.DecisionEvidence.decision_document_id == doc.id))
     if rows:
-        s.execute(m.DecisionEvidence.__table__.insert(), [
+        s.execute(insert(m.DecisionEvidence), [
             {"tenant_id": doc.tenant_id, "decision_document_id": doc.id, "source_chunk_id": r["source_chunk_id"], "relation": r["relation"], "quote": r["quote"]} for r in rows])
     doc.evidence_snapshot, doc.scoring_snapshot, doc.scoring_policy_id = ev_snapshot, sc_snapshot, policy_row.id
     doc.snapshot_taken_at = now()

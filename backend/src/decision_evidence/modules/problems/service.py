@@ -8,10 +8,10 @@ from typing import Any
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
+from decision_evidence.ai.verification import find_verbatim
 from decision_evidence.db import models as m
 from decision_evidence.errors import bad_request, conflict, not_found
 from decision_evidence.modules.common import now
-from decision_evidence.ai.verification import find_verbatim
 
 RELATIONS = ("supports", "contradicts", "context")
 
@@ -73,7 +73,7 @@ def merge_problems(s: Session, target_id: uuid.UUID, source_ids: list[uuid.UUID]
             raise conflict("source_archived", f"„{src.title}“ ist bereits archiviert")
         ev_ids = list(s.scalars(select(m.ProblemEvidence.id).where(m.ProblemEvidence.problem_id == src.id)))
         moved, dedup = move_evidence(s, ev_ids, src, target, actor)
-        inits = s.execute(update(m.Initiative).where(m.Initiative.problem_id == src.id).values(problem_id=target.id)).rowcount
+        inits = s.execute(update(m.Initiative).where(m.Initiative.problem_id == src.id).values(problem_id=target.id)).rowcount  # type: ignore[attr-defined]
         src.status, src.merged_into_problem_id = "archived", target.id
         bump(src)
         s.flush()

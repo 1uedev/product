@@ -9,7 +9,8 @@ from pydantic import BaseModel
 
 from decision_evidence.config import get_settings
 from decision_evidence.errors import ApiError
-from decision_evidence.identity import crypto, repository as repo
+from decision_evidence.identity import crypto
+from decision_evidence.identity import repository as repo
 from decision_evidence.identity.deps import current_session
 from decision_evidence.identity.oidc import OidcClient, OidcError, new_pkce_pair, safe_redirect_path
 from decision_evidence.observability.logging import get_logger
@@ -159,9 +160,9 @@ def accept_invitation(body: AcceptIn, session: Annotated[repo.SessionInfo, Depen
     except repo.InvitationError as exc:
         raise ApiError(400 if exc.code != "email_mismatch" else 403, f"invitation_{exc.code}", "Einladung nicht annehmbar",
                        _INVITE_MESSAGES[exc.code]) from exc
-    from decision_evidence.tenancy.context import add_audit
-    from decision_evidence.db.session import tenant_session
     from decision_evidence.db.engines import get_engine
+    from decision_evidence.db.session import tenant_session
+    from decision_evidence.tenancy.context import add_audit
     with tenant_session(get_engine("app"), tenant_id) as s:
         add_audit(s, session.user.id, "member.joined", "membership", None, {"user_id": str(session.user.id)})
     return AcceptOut(tenant_id=str(tenant_id))

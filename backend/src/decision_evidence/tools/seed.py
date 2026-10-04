@@ -112,6 +112,7 @@ def _evidence(s: Session, problem: m.Problem, statements: list[dd.Statement], ac
         if fi is None:
             continue
         chunk = s.scalar(select(m.SourceChunk).where(m.SourceChunk.source_record_id == fi.source_record_id).order_by(m.SourceChunk.ordinal))
+        assert chunk is not None
         theme = dd.THEMES[st.theme or ""]
         core = next((c for c in (theme.supports + theme.counters) if c in st.text), st.text)
         verified = (i % verify_every) < 3
@@ -207,7 +208,9 @@ def seed_lumen(users: dict[str, uuid.UUID]) -> None:
         extra = {"T-30001": "supports", "T-30002": "supports", "T-30003": "contradicts"}
         for ext, rel in extra.items():
             fi = s.scalar(select(m.FeedbackItem).where(m.FeedbackItem.external_id == ext))
+            assert fi is not None
             chunk = s.scalar(select(m.SourceChunk).where(m.SourceChunk.source_record_id == fi.source_record_id))
+            assert chunk is not None
             s.add(m.ProblemEvidence(problem_id=problems["export"].id, feedback_item_id=fi.id, source_chunk_id=chunk.id, relation=rel, extracted_quote=chunk.text[:160],
                                     origin="human", human_verified=False))
         add_audit(s, alice, "seed.completed", "tenant", tid, {"profile": "full"})

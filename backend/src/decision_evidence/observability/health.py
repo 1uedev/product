@@ -23,7 +23,7 @@ def _check(name: str, fn: Any) -> dict[str, Any]:
     try:
         detail = fn()
         return {"name": name, "ok": True, **({"detail": detail} if detail else {})}
-    except Exception as exc:  # noqa: BLE001 - never leak connection strings or hostnames
+    except Exception as exc:
         return {"name": name, "ok": False, "error": type(exc).__name__}
 
 

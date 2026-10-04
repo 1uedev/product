@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import uuid
 
-from conftest import Api, import_demo, run_jobs  # type: ignore[import-not-found]
+from conftest import Api, import_demo  # type: ignore[import-not-found]
 
 
 def test_unauthenticated_requests_are_rejected(workspace) -> None:  # type: ignore[no-untyped-def]
     from fastapi.testclient import TestClient
+
     from decision_evidence.main import create_app
 
     client = TestClient(create_app(), base_url="http://localhost:8480")
@@ -89,7 +90,9 @@ def test_me_lists_only_own_workspaces(workspace) -> None:  # type: ignore[no-unt
 
 def test_invitations_are_single_use_expiring_and_email_bound(workspace, make_user) -> None:  # type: ignore[no-untyped-def]
     import datetime as dt
+
     from sqlalchemy import text as sql
+
     from decision_evidence.db.engines import get_engine
     from decision_evidence.db.session import plain_session
 
@@ -136,3 +139,31 @@ def test_last_owner_protection_via_api(workspace) -> None:  # type: ignore[no-un
     assert workspace["admin"].patch(f"/members/{owner.user_id}", {"role": "viewer"}).status_code == 403
     r = owner.patch(f"/members/{workspace['viewer'].user_id}", {"role": "editor"})
     assert r.status_code == 200
+
+
+def test_foreign_jobs_imports_decisions_and_exports_are_not_reachable(workspace) -> None:  # type: ignore[no-untyped-def]
+    a, b = workspace["owner"], workspace["other_owner"]
+    # tenant B builds a complete decision with job, import batch, file and export
+    from test_domain_flow import _full_decision  # type: ignore[import-not-found]
+
+    ini, doc = _full_decision(b, b)
+    b.patch(f"/decisions/{doc['id']}", {"options": [{"name": "A"}, {"name": "B"}], "recommendation_text": "x"}, version=doc["version"])
+    b.post(f"/decisions/{doc['id']}/snapshot")
+    job_id = b.get("/jobs").json()["items"][0]["id"]
+    batch_id = b.get("/imports").json()["items"][0]["id"]
+    # the same ids under tenant A's workspace route: indistinguishable from "does not exist"
+    assert a.get(f"/jobs/{job_id}").status_code == 404
+    assert a.post(f"/jobs/{job_id}/retry").status_code == 404
+    assert a.get(f"/imports/{batch_id}").status_code == 404
+    assert a.post(f"/imports/{batch_id}/commit").status_code == 404
+    assert a.client.put(a.url(f"/imports/{batch_id}/settings"), json={}, headers=a._h()).status_code == 404
+    assert a.get(f"/decisions/{doc['id']}").status_code == 404
+    assert a.get(f"/decisions/{doc['id']}/export").status_code == 404
+    assert a.post(f"/decisions/{doc['id']}/approve").status_code == 404
+    assert a.post(f"/decisions/{doc['id']}/comments", {"body": "x"}).status_code == 404
+    assert a.get(f"/initiatives/{ini['id']}").status_code == 404
+    assert a.post("/scoring/compare", {"initiative_ids": [ini["id"]]}).json()["results"] == []   # unknown ids contribute nothing
+    for path in ("/jobs", "/imports", "/decisions", "/initiatives", "/sources", "/feedback", "/customers", "/opportunities", "/problems"):
+        assert a.get(path).json()["total"] == 0, path
+    # tenant B's own data is intact
+    assert b.get(f"/decisions/{doc['id']}").status_code == 200

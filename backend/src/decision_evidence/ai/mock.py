@@ -29,16 +29,7 @@ from decision_evidence.ai.schemas import (
 
 MOCK_MODEL = "demo-deterministic-v1"
 
-STOPWORDS = set("""
-aber alle allem allen aller alles also auch auf aus bei bin bis bitte dann das dass dem den der des die dies diese
-diesem diesen dieser dieses doch dort durch ein eine einem einen einer eines einfach es etwa euch für gegen gibt
-habe haben hat hatte hier hin ich ihr ihre ihrem ihren ihrer im in ist ja jede jedem jeden jeder jetzt kann kein
-keine keinen können könnte machen man mehr mit muss müssen nach nicht noch nun nur oder ohne sehr sein seine sich
-sie sind so soll sollte sondern über um und uns unser unsere unserem unseren unserer von vor war waren was weil
-wenn wie wir wird wieder wollen wollten würde zu zum zur zwar
-the and for are but not you your with that this have has had was were will can could would should from they them
-their there what when which who how all any our out about into than then too very just also been being does did
-""".split())
+STOPWORDS = set(["aber", "alle", "allem", "allen", "aller", "alles", "also", "auch", "auf", "aus", "bei", "bin", "bis", "bitte", "dann", "das", "dass", "dem", "den", "der", "des", "die", "dies", "diese", "diesem", "diesen", "dieser", "dieses", "doch", "dort", "durch", "ein", "eine", "einem", "einen", "einer", "eines", "einfach", "es", "etwa", "euch", "für", "gegen", "gibt", "habe", "haben", "hat", "hatte", "hier", "hin", "ich", "ihr", "ihre", "ihrem", "ihren", "ihrer", "im", "in", "ist", "ja", "jede", "jedem", "jeden", "jeder", "jetzt", "kann", "kein", "keine", "keinen", "können", "könnte", "machen", "man", "mehr", "mit", "muss", "müssen", "nach", "nicht", "noch", "nun", "nur", "oder", "ohne", "sehr", "sein", "seine", "sich", "sie", "sind", "so", "soll", "sollte", "sondern", "über", "um", "und", "uns", "unser", "unsere", "unserem", "unseren", "unserer", "von", "vor", "war", "waren", "was", "weil", "wenn", "wie", "wir", "wird", "wieder", "wollen", "wollten", "würde", "zu", "zum", "zur", "zwar", "the", "and", "for", "are", "but", "not", "you", "your", "with", "that", "this", "have", "has", "had", "was", "were", "will", "can", "could", "would", "should", "from", "they", "them", "their", "there", "what", "when", "which", "who", "how", "all", "any", "our", "out", "about", "into", "than", "then", "too", "very", "just", "also", "been", "being", "does", "did"])
 POSITIVE_PHRASES = (
     "funktioniert gut", "funktioniert einwandfrei", "läuft stabil", "läuft einwandfrei", "zufrieden", "kein problem",
     "keine probleme", "brauchen wir nicht", "nicht benötigt", "kein bedarf", "keine schwierigkeiten", "works well",

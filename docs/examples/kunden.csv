@@ -1,0 +1,9 @@
+external_id,name,segment,country,commercial_value,value_basis,currency,value_as_of
+K-1001,Alpenwerk Maschinenbau GmbH,enterprise,DE,420000,arr,EUR,2026-06-30
+K-1002,Rheinische Logistik AG,enterprise,DE,380000,arr,EUR,2026-06-30
+K-1003,Helvetia Präzision AG,enterprise,CH,310000,arr,CHF,2026-06-30
+K-1004,Nordsee Energie GmbH,mid-market,DE,1200000,annual_sales,EUR,2025-12-31
+K-1008,Kurpfalz Pharma GmbH,enterprise,DE,510000,arr,EUR,2026-06-30
+K-1009,Donauland Bau GmbH,smb,AT,24000,arr,EUR,2026-06-30
+K-1015,Franken Medizintechnik GmbH,enterprise,DE,275000,arr,EUR,2026-06-30
+K-1017,Sachsen Stahl AG,mid-market,DE,120000,arr,EUR,2026-06-30

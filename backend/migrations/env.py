@@ -4,8 +4,8 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 
 from decision_evidence.config import get_settings
-from decision_evidence.db.base import Base
 from decision_evidence.db import models  # noqa: F401  (register metadata)
+from decision_evidence.db.base import Base
 
 target_metadata = Base.metadata
 # Alembic keeps its version table in the identity-independent public-free place: schema "infra" is owned by the migrator.

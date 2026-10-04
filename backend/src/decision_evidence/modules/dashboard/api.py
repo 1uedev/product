@@ -7,9 +7,9 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 
 from decision_evidence.db import models as m
+from decision_evidence.modules.common import tenant_settings
 from decision_evidence.modules.metrics import domain as md
 from decision_evidence.modules.metrics import service as metrics_service
-from decision_evidence.modules.common import tenant_settings
 from decision_evidence.tenancy.context import TenantContext, viewer
 
 router = APIRouter(prefix="/api/v1/workspaces/{tenant_id}", tags=["dashboard"])

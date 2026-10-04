@@ -275,9 +275,15 @@ def parse_rows(kind: str, header: list[str], body: list[list[str]], mapping: dic
     out: list[ParsedRow] = []
     for i, raw in enumerate(body, start=1):
         row = ParsedRow(number=i, values={})
-        get = lambda f: _cell(raw, header, mapping.get(f))  # noqa: E731
-        err = lambda f, code, msg: row.errors.append(Issue(i, f, code, msg))  # noqa: E731
-        warn = lambda f, code, msg: row.warnings.append(Issue(i, f, code, msg))  # noqa: E731
+        def get(f: str, _raw: list[str] = raw) -> str:
+            return _cell(_raw, header, mapping.get(f))
+
+        def err(f: str, code: str, msg: str, _row: ParsedRow = row) -> None:
+            _row.errors.append(Issue(_row.number, f, code, msg))
+
+        def warn(f: str, code: str, msg: str, _row: ParsedRow = row) -> None:
+            _row.warnings.append(Issue(_row.number, f, code, msg))
+
         for fld, required in FIELD_SPECS[kind].items():
             if required and not get(fld):
                 err(fld, "required", f"{fld} fehlt.")
@@ -381,7 +387,7 @@ def _parse_feedback(row: ParsedRow, get, err, warn, options: dict[str, Any]) -> 
     v["customer_external_id"] = get("customer_external_id")[:100] or None
     v["opportunity_external_id"] = get("opportunity_external_id")[:100] or None
     raw_channel = get("channel").casefold()
-    channel = CHANNEL_ALIASES.get(raw_channel if raw_channel else "", None)
+    channel = CHANNEL_ALIASES.get(raw_channel if raw_channel else "")
     if raw_channel and channel is None:
         channel = options.get("default_channel") or "other"
         warn("channel", "unknown_channel", f"Unbekannter Kanal „{get('channel')}“, gespeichert als {channel}.")

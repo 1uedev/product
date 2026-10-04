@@ -46,7 +46,10 @@ src = ["src", "../tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
-ignore = ["S101", "S608", "B008", "RUF012", "E501"]
+# S101 asserts, S608 SQL built from constants, B008 FastAPI Depends(), RUF012 mutable class attrs, E501 long lines,
+# RUF001 German typography in user-facing strings, RUF059/C408/C416/SIM105/SIM108/SIM117/UP046 style preferences,
+# S105/S311: demo password hint and deterministic synthetic data are intentional.
+ignore = ["S101", "S608", "B008", "RUF012", "E501", "RUF001", "RUF059", "C408", "C416", "C401", "C405", "SIM105", "SIM108", "SIM117", "UP046", "S105", "S311"]
 
 [tool.ruff.lint.per-file-ignores]
 "../tests/**" = ["S105", "S106", "S311", "S324", "E402", "S608"]

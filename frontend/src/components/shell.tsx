@@ -32,9 +32,12 @@ export function Shell({ children }: { children: ReactNode }) {
     try {
       const out = await api<{ logout_url: string | null }>("POST", "/api/v1/auth/logout");
       // the logout URL points at the identity provider (other path on the same origin or another host): a full navigation is intended
+      window.location.assign(out.logout_url ?? "/");
+    } catch {
+      // a full page load also drops all client side state after a failed logout call
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = out.logout_url ?? "/";
-    } catch { window.location.href = "/"; }
+      window.location.assign("/");
+    }
   }
   return (
     <div className="shell">

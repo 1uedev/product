@@ -13,7 +13,6 @@ from typing import Any
 
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.orm import Session
 
 from decision_evidence.db import models as m
 from decision_evidence.db.engines import get_engine
