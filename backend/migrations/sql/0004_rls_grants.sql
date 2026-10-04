@@ -91,3 +91,6 @@ REVOKE CREATE ON SCHEMA infra FROM de_recovery;
 REVOKE ALL ON FUNCTION infra.find_stale_jobs(integer), infra.find_stale_files(integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION infra.find_stale_jobs(integer), infra.find_stale_files(integer) TO de_worker;
 GRANT USAGE ON SCHEMA infra TO de_recovery;
+
+-- readiness probe: runtime roles may read the migration revision, nothing else in the version table
+GRANT SELECT ON infra.alembic_version TO de_app, de_worker;

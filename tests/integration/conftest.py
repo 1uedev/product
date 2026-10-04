@@ -94,3 +94,109 @@ def seeded(make_tenant, app_session) -> Iterator[dict]:  # type: ignore[no-untyp
             s.flush()
             out[key] = {"tenant": t, "customer": cust.id, "record": sr.id, "chunk": chunk.id, "feedback": fb.id, "problem": prob.id}
     yield out
+
+
+# --------------------------------------------------------------------------- API-level fixtures
+import re  # noqa: E402
+
+from fastapi.testclient import TestClient  # noqa: E402
+
+from decision_evidence.identity import repository as identity_repo  # noqa: E402
+from decision_evidence.jobs import handlers as _handlers  # noqa: E402,F401
+from decision_evidence.jobs.runner import execute_job  # noqa: E402
+from decision_evidence.storage.memory import MemoryStorage  # noqa: E402
+from decision_evidence.storage.s3 import set_storage_override  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def memory_storage() -> Iterator[MemoryStorage]:
+    storage = MemoryStorage()
+    set_storage_override(storage)
+    yield storage
+    set_storage_override(None)
+
+
+class Api:
+    """Thin client for one signed-in user. Sessions are created through the identity repository (the real OIDC round trip
+    is covered by the browser end-to-end tests); everything else goes through HTTP."""
+
+    def __init__(self, user_id: uuid.UUID, tenant_id: uuid.UUID | None = None) -> None:
+        from decision_evidence.main import create_app
+
+        settings = get_settings()
+        self.client = TestClient(create_app(), base_url="http://localhost:8480", raise_server_exceptions=False)
+        token, self.csrf = identity_repo.create_session(user_id, None, 8)
+        self.client.cookies.set(settings.effective_cookie_name, token)
+        self.user_id, self.tenant_id = user_id, tenant_id
+
+    def url(self, path: str) -> str:
+        return f"/api/v1/workspaces/{self.tenant_id}{path}"
+
+    def _h(self, extra: dict | None = None) -> dict:
+        return {"X-CSRF-Token": self.csrf, "Origin": "http://localhost:8480", **(extra or {})}
+
+    def get(self, path: str, **kw):  # type: ignore[no-untyped-def]
+        return self.client.get(self.url(path), **kw)
+
+    def post(self, path: str, json=None, **kw):  # type: ignore[no-untyped-def]
+        return self.client.post(self.url(path), json=json, headers=self._h(), **kw)
+
+    def patch(self, path: str, json=None, version: int | None = None, **kw):  # type: ignore[no-untyped-def]
+        headers = self._h({"If-Match": f'"{version}"'} if version is not None else None)
+        return self.client.patch(self.url(path), json=json, headers=headers, **kw)
+
+    def delete(self, path: str, **kw):  # type: ignore[no-untyped-def]
+        return self.client.delete(self.url(path), headers=self._h(), **kw)
+
+    def upload(self, kind: str, name: str, content: str | bytes, ctype: str = "text/csv", synthetic: bool = False):  # type: ignore[no-untyped-def]
+        data = content.encode() if isinstance(content, str) else content
+        return self.client.post(self.url("/imports"), headers=self._h(), data={"kind": kind, "synthetic": str(synthetic).lower()},
+                                files={"file": (name, data, ctype)})
+
+
+def run_jobs(tenant_id: uuid.UUID, limit: int = 10) -> list[tuple[str, str]]:
+    """Simulates publisher + worker deterministically: executes every queued job of the tenant once."""
+    done = []
+    with tenant_session(get_engine("worker"), tenant_id) as s:
+        ids = [(j.id, j.kind) for j in s.scalars(__import__("sqlalchemy").select(m.Job).where(m.Job.status == "queued").order_by(m.Job.created_at).limit(limit))]
+    for jid, kind in ids:
+        done.append((kind, execute_job(tenant_id, jid)))
+    return done
+
+
+@pytest.fixture
+def workspace(make_tenant, make_user):  # type: ignore[no-untyped-def]
+    """A tenant with one user per role plus an outsider of another tenant."""
+    t = make_tenant("Workspace")
+    users = {role: make_user(role) for role in ("admin", "editor", "viewer")}
+    with plain_session(get_engine("auth")) as s:
+        for role, uid in users.items():
+            s.add(m.Membership(tenant_id=t.id, user_id=uid, role=role))
+    other = make_tenant("Other")
+    return {
+        "tenant": t, "other": other,
+        "owner": Api(t.owner_id, t.id), "admin": Api(users["admin"], t.id), "editor": Api(users["editor"], t.id), "viewer": Api(users["viewer"], t.id),
+        "outsider": Api(other.owner_id, t.id),            # signed in, but a member of the OTHER tenant only
+        "other_owner": Api(other.owner_id, other.id),
+    }
+
+
+def import_demo(api: Api, profile: str = "small") -> None:
+    from decision_evidence.tools import demo_data
+
+    ds = demo_data.generate(profile)
+    for kind, name, content in (("customers", "kunden.csv", ds.customers_csv), ("opportunities", "opps.csv", ds.opportunities_csv),
+                                ("feedback", "feedback.csv", ds.feedback_csv)):
+        r = api.upload(kind, name, content, synthetic=True)
+        assert r.status_code == 201, r.text
+        batch = r.json()
+        r = api.client.put(api.url(f"/imports/{batch['id']}/settings"), json={}, headers=api._h())
+        assert r.status_code == 200, r.text
+        assert not r.json()["preview"]["blocking"], r.json()["preview"]
+        r = api.post(f"/imports/{batch['id']}/commit")
+        assert r.status_code == 202, r.text
+        outcome = run_jobs(api.tenant_id)  # type: ignore[arg-type]
+        assert outcome == [("import_commit", "succeeded")], outcome
+
+
+_ = re
