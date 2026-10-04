@@ -33,12 +33,12 @@ Die Produktions-Realm enthält **keine** Nutzer und keine bekannten Passwörter.
 
 ```sh
 KC="docker compose -p <projekt> -f compose.prod.yaml --env-file .env.prod exec keycloak /opt/keycloak/bin/kcadm.sh"
-$KC config credentials --server http://localhost:8080/auth --realm master --user admin --password '<KEYCLOAK_ADMIN_PASSWORD>'
-$KC create users -r decision-evidence -s username=owner@example.org -s email=owner@example.org -s emailVerified=true -s enabled=true
+$KC config credentials --server http://127.0.0.1:8080/auth --realm master --user admin --password '<KEYCLOAK_ADMIN_PASSWORD>'
+$KC create users -r decision-evidence -s username=owner@example.org -s email=owner@example.org -s firstName=Olivia -s lastName=Owner -s emailVerified=true -s enabled=true
 $KC set-password -r decision-evidence --username owner@example.org --new-password '<Startpasswort>' --temporary
 ```
 
-Danach den ersten Workspace anlegen. Entweder beim Start über die Umgebung (`BOOTSTRAP_TENANT_SLUG`, `BOOTSTRAP_TENANT_NAME`, `BOOTSTRAP_OWNER_EMAIL`; der einmalige Einladungslink steht im Log von `bootstrap`:
+Vor- und Nachname sind in der Realm Pflichtfelder; fehlen sie, fordert Keycloak sie bei der ersten Anmeldung ab. Danach den ersten Workspace anlegen. Entweder beim Start über die Umgebung (`BOOTSTRAP_TENANT_SLUG`, `BOOTSTRAP_TENANT_NAME`, `BOOTSTRAP_OWNER_EMAIL`; der einmalige Einladungslink steht im Log von `bootstrap`:
 `docker compose ... logs bootstrap | grep invitation`) oder später per CLI:
 
 ```sh

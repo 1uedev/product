@@ -35,8 +35,9 @@ export async function openWorkspace(page: Page, name: RegExp): Promise<string> {
   const picker = page.getByRole("heading", { name: "Workspace wählen" });
   await switcher.or(picker).first().waitFor({ state: "visible", timeout: 30_000 });
   if (await picker.isVisible()) {
-    await page.getByRole("link", { name }).click();
-    await expect(switcher).toBeVisible();
+    // users with a single workspace are forwarded automatically: the picker can disappear while we look at it
+    await page.getByRole("link", { name }).click({ timeout: 5_000 }).catch(() => undefined);
+    await expect(switcher).toBeVisible({ timeout: 20_000 });
   }
   const current = await page.locator("#ws-switch option:checked").textContent();
   if (!name.test(current ?? "")) {
