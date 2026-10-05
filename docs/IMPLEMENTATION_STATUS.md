@@ -36,6 +36,7 @@ Der Demo-KI-Modus ist keine Bestätigung der Qualität eines echten Modells.
 | Backup und Restore (PostgreSQL, Keycloak-DB, Objekte), Restore in neues Projekt | ja | ja | ja | |
 | Testisolation (`de-test-*`-Projekte, eigene Volumes) | ja | ja | ja | |
 | Dokumentation (README, ER-Diagramm, OpenAPI, ADRs, Betrieb, KI-Datenfluss, Importbeispiele) | ja | | | siehe [README](../README.md) |
+| Benutzerhandbuch mit 56 Screenshots (aus der laufenden Anwendung erzeugt, reproduzierbar per Skript) | ja | ja (Bilder stammen aus echten Anmeldungen und dem Demo-Betrieb) | | [Handbuch](benutzerhandbuch/README.md). Bilder zeigen den Demo-Adapter, nicht ein echtes Modell. Nicht dokumentiert: die Anbindung eines Identity Providers des Kunden |
 | CI-Konfiguration (`.github/workflows/ci.yml`) | ja | | | **nie in GitHub Actions ausgeführt**; die aufgerufenen Skripte liefen lokal |
 
 ## Bewusst nicht Teil des MVP (offene Erweiterungen)

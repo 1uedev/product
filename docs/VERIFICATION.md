@@ -23,6 +23,7 @@ Alle Docker-Läufe verwenden eigene Compose-Projekte `de-test-<zufall>` mit eige
 | Lokales Modell: Adapter gegen **echten Ollama-Server 0.35.1 ohne Modell** | `OLLAMA_TEST_URL=http://127.0.0.1:11434 uv run pytest ../tests/live` | 2 bestanden (Fehlerbild „Modell fehlt“ aus der echten 404-Antwort, nicht erreichbarer Server), 1 übersprungen (benötigt `OLLAMA_TEST_MODEL`) |
 | Lokales Modell: ganzer Weg mit **echtem Ollama-Container** im Stack | `OLLAMA_OVERLAY=1 AI_PROVIDER=ollama OLLAMA_MODEL=qwen3:8b scripts/test_e2e.sh 40-ollama` | bestanden (Oberfläche zeigt den Anbieter, die Analyse läuft über API, Outbox, Broker und Worker zum Ollama-Container, die Oberfläche zeigt `ai_model_missing` mit dem Hinweis `ollama pull`) |
 | Backup und Restore in ein neues Projekt | `scripts/test_backup_restore.sh` | **bestanden** (Tabellenzählungen identisch, 8 Objekte, keine fehlenden und keine verwaisten Objekte, Browser-Prüfung gegen das wiederhergestellte Projekt) |
+| Benutzerhandbuch: alle 56 Screenshots aus der laufenden Anwendung aufgenommen (frischer Teststack, echte Anmeldungen, kompletter Hauptablauf) und auf Vollständigkeit und Verweise geprüft | `playwright test -c playwright.screenshots.config.ts`, `pytest ../tests/unit/test_docs.py` | 9 von 9 Aufnahmeschritten bestanden, 2 Konsistenztests bestanden (Bilder und Kapitelverweise) |
 | Compose-Dateien syntaktisch | `docker compose -f compose.yaml config -q`, mit `compose.test.yaml`, Produktionsdatei über `check_prod_config.sh` | bestanden |
 
 ## Was die Browser-Tests abdecken (`tests/e2e/specs`)

@@ -125,6 +125,7 @@ Restore schreibt nur in ein neues, leeres Projekt und löscht nie etwas. Details
 
 | Dokument | Inhalt |
 |---|---|
+| [docs/benutzerhandbuch](docs/benutzerhandbuch/README.md) | **Benutzerhandbuch** mit Screenshots: Anmeldung, Import, Analyse, Korrektur, Initiative, Entscheidung, Freigabe, Export, Rollen |
 | [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | was umgesetzt ist, was offen ist (Fortsetzung nach Kontextwechsel möglich) |
 | [docs/VERIFICATION.md](docs/VERIFICATION.md) | ausgeführte Prüfungen mit Befehl und Ergebnis, nicht ausgeführte Prüfungen |
 | [docs/architecture/overview.md](docs/architecture/overview.md) | Bausteine, Prozesse, Hauptablauf |
