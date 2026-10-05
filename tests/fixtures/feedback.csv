@@ -1,0 +1,22 @@
+external_id,customer_external_id,opportunity_external_id,channel,occurred_at,body,language
+T-10010,K-1004,,survey,2026-07-20,"Die exportierte CSV-Datei enthält nicht alle Spalten, die wir im Dashboard sehen. Das haben wir schon mehrfach gemeldet.",de
+T-10016,K-1008,,interview,2026-07-01,"Der Sicherheitsbeauftragte fragt nach SSO und Anmeldeprotokollen, ohne SAML geht es nicht weiter. Unser Management fragt regelmäßig danach.",de
+T-10007,K-1002,,email,2026-09-07,"Wichtig für uns: Die exportierte CSV-Datei enthält nicht alle Spalten, die wir im Dashboard sehen.",de
+T-10019,K-1015,O-2014,interview,2026-07-25,"Der Sicherheitsbeauftragte fragt nach SSO und Anmeldeprotokollen, ohne SAML geht es nicht weiter.",de
+T-10012,K-1002,,email,2026-04-12,Ohne SAML-Anbindung für Single Sign-on dürfen wir die Software intern nicht ausrollen. Im Quartalsabschluss ist das besonders kritisch.,de
+T-10014,K-1008,,interview,2026-05-09,"Hallo, Mitarbeiter sollen sich mit dem Firmenkonto anmelden können, SAML-SSO ist dafür Voraussetzung.",de
+T-10008,K-1002,,email,2026-06-26,"Beim CSV-Export mit Filtern fehlen Zeilen, wir müssen jede Datei nachzählen. Unser Management fragt regelmäßig danach.",de
+T-10003,K-1001,,ticket,2026-07-18,"Beim CSV-Export mit Filtern fehlen Zeilen, wir müssen jede Datei nachzählen. Im Quartalsabschluss ist das besonders kritisch.",de
+T-10004,K-1001,O-2001,call,2026-07-02,"Wir exportieren jede Woche den Bestand als CSV, aber der Export bricht regelmäßig ab und wir müssen Zeilen manuell nachladen.",de
+T-10015,K-1008,,ticket,2026-07-12,"Wir brauchen SAML-SSO und automatische Nutzerprovisionierung, sonst scheitert die Freigabe durch die Informationssicherheit.",de
+T-10013,K-1002,,email,2026-01-29,"Wir brauchen SAML-SSO und automatische Nutzerprovisionierung, sonst scheitert die Freigabe durch die Informationssicherheit.",de
+T-10005,K-1001,,ticket,2026-07-01,Aus dem letzten Jour fixe: Beim Export nach CSV kommt nach etwa zwei Minuten ein Timeout und die Datei ist unvollständig.,de
+T-10011,K-1004,O-2007,call,2026-09-13,"Die exportierte CSV-Datei enthält nicht alle Spalten, die wir im Dashboard sehen.",de
+T-10002,K-1001,O-2001,email,2026-09-19,Beim Export nach CSV kommt nach etwa zwei Minuten ein Timeout und die Datei ist unvollständig.,de
+T-10018,K-1015,,chat,2026-07-24,"Zum Ticket von letzter Woche: Der Sicherheitsbeauftragte fragt nach SSO und Anmeldeprotokollen, ohne SAML geht es nicht weiter.",de
+T-10006,K-1001,,survey,2026-06-27,"Für unsere Buchhaltung brauchen wir einen verlässlichen CSV-Export, aktuell bricht er bei großen Mengen ohne Fehlermeldung ab.",de
+T-10017,K-1009,,chat,2026-01-24,"Die Anmeldung funktioniert bei uns gut, ein Single Sign-on ist kein Thema.",de
+T-10009,K-1003,,email,2026-09-09,"Der CSV-Export funktioniert bei uns einwandfrei, wir haben damit kein Problem.",de
+T-10001,K-1001,O-2001,survey,2026-07-27,Der CSV-Export bricht bei großen Tabellen mit mehr als 50.000 Zeilen ab.,de
+T-20000,K-1004,,email,2026-07-29,"  Die exportierte CSV-Datei enthält nicht alle Spalten, die wir im Dashboard sehen. Das haben wir schon mehrfach gemeldet.  ",de
+T-20001,K-1008,,email,2026-07-10,"DER SICHERHEITSBEAUFTRAGTE FRAGT NACH SSO UND ANMELDEPROTOKOLLEN, OHNE SAML GEHT ES NICHT WEITER. UNSER MANAGEMENT FRAGT REGELMÄSSIG DANACH.",de

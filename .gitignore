@@ -1,0 +1,26 @@
+# secrets and local state
+.env
+.env.*
+!.env.example
+backups/
+*.log
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+# node
+node_modules/
+.next/
+frontend/test-results/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+playwright-report/
+test-results/
+# editors
+.idea/
+.vscode/
+.DS_Store

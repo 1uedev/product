@@ -1,0 +1,17 @@
+external_id,customer_external_id,name,stage,amount,currency,closed_at
+O-2001,K-1001,Alpenwerk Neukunden-Lizenz,open,120000,EUR,
+O-2002,K-1001,Alpenwerk Neukunden-Lizenz,won,36000,EUR,2026-06-11
+O-2003,K-1002,Rheinische Neukunden-Lizenz,won,18000,EUR,2026-09-02
+O-2004,K-1002,Rheinische Neukunden-Lizenz,no_decision,24000,EUR,2026-06-19
+O-2005,K-1003,Helvetia Neukunden-Lizenz,no_decision,18000,CHF,2026-01-31
+O-2006,K-1003,Helvetia Neukunden-Lizenz,open,52000,CHF,
+O-2007,K-1004,Nordsee Neukunden-Lizenz,open,18000,EUR,
+O-2008,K-1004,Nordsee Neukunden-Lizenz,open,24000,EUR,
+O-2009,K-1008,Kurpfalz Neukunden-Lizenz,open,180000,EUR,
+O-2010,K-1008,Kurpfalz Neukunden-Lizenz,won,180000,EUR,2026-09-03
+O-2011,K-1009,Donauland Neukunden-Lizenz,won,,,2026-08-28
+O-2012,K-1009,Donauland Neukunden-Lizenz,no_decision,180000,EUR,2026-09-05
+O-2013,K-1015,Franken Neukunden-Lizenz,no_decision,24000,EUR,2026-01-21
+O-2014,K-1015,Franken Neukunden-Lizenz,open,52000,EUR,
+O-2015,K-1017,Sachsen Neukunden-Lizenz,open,18000,EUR,
+O-2016,K-1017,Sachsen Neukunden-Lizenz,open,180000,EUR,

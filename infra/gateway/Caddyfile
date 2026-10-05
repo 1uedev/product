@@ -1,0 +1,52 @@
+# Single browser origin: /api -> backend, /auth -> Keycloak, everything else -> Next.js.
+# SITE_ADDRESS=":80" (demo, plain HTTP on the published loopback port) or a host name (production: automatic HTTPS).
+{
+	admin off
+	http_port {$HTTP_PORT:80}
+	https_port {$HTTPS_PORT:443}
+}
+
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# CADDY_TLS_MODE=auto (default): public certificates via ACME. CADDY_TLS_MODE=internal: Caddy's own CA (local production-mode trials).
+	import /etc/caddy/tls-{$CADDY_TLS_MODE:auto}.caddy
+
+	# The Keycloak admin console and the master realm are never reachable through the gateway.
+	@blocked path /auth/admin /auth/admin/* /auth/realms/master /auth/realms/master/*
+	handle @blocked {
+		respond "Not found" 404
+	}
+
+	handle /api/* {
+		header {
+			Strict-Transport-Security "max-age=31536000; includeSubDomains"
+			-Server
+		}
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
+	}
+
+	handle /auth/* {
+		reverse_proxy keycloak:8080
+	}
+
+	handle {
+		header {
+			Strict-Transport-Security "max-age=31536000; includeSubDomains"
+			X-Content-Type-Options nosniff
+			X-Frame-Options DENY
+			Referrer-Policy same-origin
+			Permissions-Policy "camera=(), microphone=(), geolocation=()"
+			Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+			-Server
+		}
+		reverse_proxy frontend:3000
+	}
+}
+
+# internal health endpoint (not published)
+:8081 {
+	respond /healthz "ok" 200
+}

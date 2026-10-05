@@ -1,0 +1,140 @@
+{
+  "realm": "decision-evidence",
+  "displayName": "decision-evidence",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "failureFactor": 10,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 36000,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "de",
+    "en"
+  ],
+  "defaultLocale": "de",
+  "clients": [
+    {
+      "clientId": "decision-evidence-web",
+      "name": "decision-evidence",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "${PUBLIC_ORIGIN}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "${PUBLIC_ORIGIN}/api/v1/auth/callback"
+      ],
+      "webOrigins": [
+        "${PUBLIC_ORIGIN}"
+      ],
+      "frontchannelLogout": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${PUBLIC_ORIGIN}/",
+        "access.token.lifespan": "900",
+        "client.secret.creation.time": "0"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": []
+    }
+  ],
+  "users": [
+    {
+      "id": "2053d9b9-ed5b-5319-9979-7f7a8f01a865",
+      "username": "alice@lumen.example",
+      "email": "alice@lumen.example",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Alice",
+      "lastName": "Owner",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00d828cf-39d7-5686-a369-7daf540c8bfb",
+      "username": "dora@lumen.example",
+      "email": "dora@lumen.example",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dora",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "ba6ea632-b27f-5f94-b744-1783a86b729b",
+      "username": "bob@lumen.example",
+      "email": "bob@lumen.example",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Bob",
+      "lastName": "Editor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "31885745-b728-5fe5-a769-3af991b8a416",
+      "username": "vera@lumen.example",
+      "email": "vera@lumen.example",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Vera",
+      "lastName": "Viewer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "9c72ae20-35af-5dc8-a7cd-3c911d43641d",
+      "username": "finn@fjord.example",
+      "email": "finn@fjord.example",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Finn",
+      "lastName": "Fjord",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-Passw0rd!",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

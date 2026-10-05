@@ -1,0 +1,104 @@
+# CI for decision-evidence. NOTE: this workflow has not been executed by the author of this repository state (no GitHub runner was
+# available); every command it uses was run locally as documented in docs/VERIFICATION.md. All Docker based jobs use isolated,
+# randomly named compose projects (de-test-*) with their own volumes and never touch other containers or volumes.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen
+        working-directory: backend
+      - run: uv run ruff check src ../tests
+        working-directory: backend
+      - run: uv run mypy src
+        working-directory: backend
+      - name: Unit and integration tests (PostgreSQL 18, restricted runtime roles)
+        run: sh scripts/test_integration.sh -q
+
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: frontend
+      - run: pnpm lint
+        working-directory: frontend
+      - run: pnpm typecheck
+        working-directory: frontend
+      - run: pnpm build
+        working-directory: frontend
+      - name: Generated API types are up to date
+        run: |
+          cd backend && uv sync --frozen
+          DB_HOST=x APP_ENV=test OIDC_ISSUER=http://x uv run python -m decision_evidence.tools.export_openapi ../docs/openapi.json
+          cd ../frontend && pnpm gen:api && cd ..
+          git diff --exit-code docs/openapi.json frontend/src/api/schema.d.ts
+
+  compose-config:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f compose.yaml config -q
+      - run: docker compose -f compose.yaml -f compose.test.yaml config -q
+      - run: docker compose -f compose.yaml -f compose.ollama.yaml config -q
+      - name: Production file refuses missing secrets and accepts a complete environment
+        run: |
+          if docker compose -f compose.prod.yaml config -q 2>/dev/null; then echo "must fail without secrets"; exit 1; fi
+          sh scripts/check_prod_config.sh
+
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - name: Browser end-to-end tests (real Keycloak login, worker, broker, storage; includes resilience scenarios)
+        run: sh scripts/test_e2e.sh
+      - name: Backup and restore into a new isolated project
+        run: sh scripts/test_backup_restore.sh
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            tests/e2e/playwright-report
+            tests/e2e/test-results
